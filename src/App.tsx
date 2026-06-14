@@ -29,7 +29,8 @@ import {
   Award,
   Compass,
   Menu,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
 import { playTapSound, playLevelUpSound, playSuccessSound } from './utils/audio';
 
@@ -148,6 +149,7 @@ export default function App() {
   const [useBackupPasscode, setUseBackupPasscode] = useState(false);
   const [inputPasscode, setInputPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
+  const [googleAuthError, setGoogleAuthError] = useState<string | null>(null);
 
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [fanLevel, setFanLevel] = useState(() => {
@@ -516,13 +518,19 @@ export default function App() {
   // Sign in with Google
   const handleLogin = async () => {
     setIsAuthenticating(true);
+    setGoogleAuthError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       triggerAudio('success');
       setNotifMessage(`Bem-vindo, ${result.user.displayName || 'Admin'}! 🎉`);
       setTimeout(() => setNotifMessage(null), 4000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      let errorMsg = error?.message || String(error);
+      if (error?.code === 'auth/unauthorized-domain' || errorMsg.includes('unauthorized-domain') || errorMsg.includes('domain-not-authorized')) {
+        errorMsg = `⚠️ DOMÍNIO NÃO AUTORIZADO NO FIREBASE! O domínio atual do seu site ("${window.location.hostname}") não está cadastrado ou autorizado no seu projeto do Firebase. Você precisa adicionar "${window.location.hostname}" na lista de Domínios Autorizados nas configurações do seu Firebase Console (Authentication > Configurações > Domínios Autorizados) para liberar o login com o Google!`;
+      }
+      setGoogleAuthError(errorMsg);
     } finally {
       setIsAuthenticating(false);
     }
@@ -1290,6 +1298,21 @@ export default function App() {
                             {useBackupPasscode ? 'Cancelar' : 'Entrar com Código PIN'}
                           </button>
                         </div>
+
+                        {googleAuthError && (
+                          <div className="max-w-md mx-auto p-4 bg-red-950/40 border border-red-500/30 rounded-2xl text-left space-y-2">
+                            <div className="flex items-center gap-2 text-red-400 font-extrabold text-xs uppercase">
+                              <AlertTriangle className="w-4 h-4" />
+                              <span>Erro de Conexão</span>
+                            </div>
+                            <p className="text-gray-300 text-xs font-sans leading-relaxed">
+                              {googleAuthError}
+                            </p>
+                            <p className="text-[11px] text-indigo-400 font-sans leading-relaxed mt-1">
+                              💡 <strong>Dica:</strong> Se você estiver rodando em <strong>pkxdcentral.github.io</strong> ou em outro link customizado, siga o tutorial de **"Domínio Autorizado"** disponível na aba de Spoilers do seu Painel de Administrador (após logar usando o Código PIN) para resolver em 30 segundos!
+                            </p>
+                          </div>
+                        )}
 
                         {useBackupPasscode && (
                           <div className="max-w-xs mx-auto p-4 bg-zinc-950/80 rounded-2xl border border-white/5 space-y-3">

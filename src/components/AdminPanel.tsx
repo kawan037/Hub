@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NewsItem, FeaturedVideo, Theory, ShortItem, PastSpoiler } from '../types';
 import { 
   PlusCircle, Save, Sparkles, RefreshCw, X, Image, ExternalLink, Video, 
-  Smartphone, BookOpen, Clock, Wand2, Loader2, Play, BellRing, AlertTriangle
+  Smartphone, BookOpen, Clock, Wand2, Loader2, Play, BellRing, AlertTriangle, Globe
 } from 'lucide-react';
 import { playTapSound, playSuccessSound } from '../utils/audio';
 import { auth } from '../firebase';
@@ -250,6 +250,12 @@ export default function AdminPanel({
   const [gmailError, setGmailError] = useState<string | null>(null);
   const [importingGmailId, setImportingGmailId] = useState<string | null>(null);
 
+  // Local Copy & Paste manual import alternative states
+  const [showLocalImport, setShowLocalImport] = useState(false);
+  const [localPasteTitle, setLocalPasteTitle] = useState('');
+  const [localPasteContent, setLocalPasteContent] = useState('');
+  const [localImportStatus, setLocalImportStatus] = useState<string | null>(null);
+
   // Decode Base64URL to Unicode standard string safely
   const decodeBase64Url = (str: string): string => {
     let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
@@ -410,6 +416,71 @@ export default function AdminPanel({
     }
   };
 
+  const handleLocalPasteImport = () => {
+    if (!localPasteContent.trim()) {
+      setLocalImportStatus('⚠️ Por favor, cole o conteúdo (texto ou HTML) do e-mail de spoiler.');
+      return;
+    }
+
+    try {
+      setLocalImportStatus('⏳ Processando e convertendo...');
+      
+      let finalMarkdown = '';
+      const content = localPasteContent.trim();
+      const isHTML = /<[a-z][\s\S]*>/i.test(content);
+      
+      if (isHTML) {
+        // Simple HTML parse & convert
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/html');
+        
+        let titleGuess = '';
+        const titleEl = doc.querySelector('title') || doc.querySelector('h1') || doc.querySelector('h2');
+        if (titleEl && titleEl.textContent && !localPasteTitle.trim()) {
+          titleGuess = titleEl.textContent.trim();
+        }
+        
+        finalMarkdown = convertHtmlToMarkdownWithCids(content, {});
+        
+        if (titleGuess && !localPasteTitle.trim()) {
+          setLocalPasteTitle(titleGuess);
+        }
+
+        // Try to find image URLs
+        const imgs = doc.getElementsByTagName('img');
+        if (imgs.length > 0) {
+          const firstImgSrc = imgs[0].src || imgs[0].getAttribute('src') || '';
+          if (firstImgSrc && !firstImgSrc.startsWith('cid:')) {
+            setExpressImage(firstImgSrc);
+            setSpoilerImage(firstImgSrc);
+          }
+        }
+      } else {
+        // Plain text
+        finalMarkdown = content;
+      }
+      
+      const activeTitle = localPasteTitle.trim() || 'SPOILER REVELADO POR E-MAIL! 🔮';
+      
+      setExpressTitle(activeTitle);
+      setExpressDescAuto(finalMarkdown);
+      
+      setSpoilerTitle(activeTitle);
+      setSpoilerDesc(finalMarkdown);
+      
+      setLocalImportStatus(null);
+      setLocalPasteContent('');
+      setLocalPasteTitle('');
+      setShowLocalImport(false);
+      
+      showStatus('✨ Conteúdo do e-mail importado e formatado no editor com sucesso! 🎉');
+      playSuccessSound();
+    } catch (err: any) {
+      console.error(err);
+      setLocalImportStatus(`❌ Erro ao converter o e-mail: ${err.message || String(err)}`);
+    }
+  };
+
   const connectGmail = async () => {
     try {
       setIsGmailLoading(true);
@@ -444,6 +515,8 @@ export default function AdminPanel({
         customErr = 'Uma tentativa de conexão já estava em andamento. Aguarde ou reinicie o aplicativo.';
       } else if (err.message?.includes('restricted') || err.message?.includes('verification')) {
         customErr = 'Acesso bloqueado por restrições de escopo do Gmail do Google. Siga o tutorial de "Usuários de Teste" abaixo para liberar o acesso imediatamente! 🔒';
+      } else if (err.code === 'auth/unauthorized-domain' || err.message?.includes('unauthorized-domain') || err.message?.includes('domain-not-authorized')) {
+        customErr = `⚠️ ERRO DE DOMÍNIO NÃO AUTORIZADO! O domínio atual do seu site ("${window.location.hostname}") não está cadastrado ou autorizado no seu projeto do Firebase. Você precisa adicionar "${window.location.hostname}" na lista de Domínios Autorizados no Firebase Console do seu app para liberar o login do e-mail! Siga as instruções no guia passo a passo logo abaixo para resolver super rápido! 🚀`;
       }
       
       setGmailError(customErr);
@@ -1353,52 +1426,172 @@ export default function AdminPanel({
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-end gap-2 text-right">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 text-right">
+                      <button
+                        onClick={() => { setShowLocalImport(!showLocalImport); playTapSound(); }}
+                        className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 cursor-pointer shadow border border-zinc-700 shrink-0 active:scale-95"
+                      >
+                        📥 Importar Sem Login/Senha (Copiar & Colar)
+                      </button>
+
                       <button
                         onClick={connectGmail}
                         className="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 border-0 hover:shadow-red-600/20 hover:shadow-xl shrink-0"
                       >
-                        🔌 Conectar com o Google / Gmail
+                        🔌 Login Google/Gmail
                       </button>
                     </div>
                   )}
                 </div>
 
-                {/* Collapsible Step-by-Step Fix Guide for Gmail Verification Blocker */}
-                {!gmailToken && (
-                  <div className="mt-3 bg-red-950/20 border border-red-500/25 rounded-2xl p-4 text-left space-y-3">
-                    <div className="flex items-start gap-2.5">
-                      <AlertTriangle className="w-4.5 h-4.5 text-yellow-300 flex-shrink-0 mt-0.5" />
+                {/* LOCAL MANUAL COPY-PASTE IMPORT BOX */}
+                {showLocalImport && (
+                  <div className="bg-zinc-950/90 border-2 border-pink-500/30 rounded-2xl p-4.5 space-y-4 shadow-2xl animate-fade-in text-left">
+                    <div className="flex items-start gap-2">
+                      <span className="text-pink-400 text-lg">💡</span>
                       <div>
-                        <h5 className="font-sans font-black text-xs text-yellow-300 uppercase leading-tight tracking-tight">
-                          ⚠️ "ACESSO BLOQUEADO" ou "POPUP FECHADO" NO LOGIN?
+                        <h5 className="font-sans font-black text-xs text-pink-400 uppercase leading-none tracking-tight">
+                          IMPORTADOR SEM LOGIN (Super Recomendador para Celular! 📱)
                         </h5>
                         <p className="text-[11px] text-gray-300 mt-1 leading-relaxed">
-                          O Gmail é altamento protegido pelo Google. Para permitir a conexão do e-mail <strong>eukoosh@gmail.com</strong> ou <strong>kawanyuri35@gmail.com</strong> no app privado <code>plasma-transmitter-gq7jp.firebaseapp.com</code>, siga as instruções abaixo:
+                          Se o login do Google estiver bloqueado por permissões de domínio ou erro corporativo, use este método! Basta abrir o e-mail de spoiler no seu aplicativo do Gmail, <strong>selecionar/copiar todo o texto ou código HTML</strong> e colar aqui abaixo:
                         </p>
                       </div>
                     </div>
 
-                    <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-2 text-[10.5px] font-sans text-gray-300 leading-relaxed max-h-[180px] overflow-y-auto">
-                      <p>
-                        <strong className="text-pink-400">Passo 1:</strong> Acesse o console do Google Cloud: <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold hover:text-cyan-300">console.cloud.google.com</a> logado na mesma conta administradora do Firebase.
-                      </p>
-                      <p>
-                        <strong className="text-pink-400">Passo 2:</strong> No menu superior (ao lado do logo do Google Cloud), clique no <strong className="text-white">Seletor de Projetos</strong> e certifique-se de abrir o projeto correto do seu app (ex: <code>plasma-transmitter-gq7jp</code>).
-                      </p>
-                      <p>
-                        <strong className="text-pink-400">Passo 3:</strong> Abra o menu de navegação ☰ e vá em <strong className="text-emerald-400">APIs e Serviços</strong> &gt; <strong className="text-emerald-400">Tela de consentimento OAuth</strong>.
-                      </p>
-                      <p>
-                        <strong className="text-pink-400">Passo 4:</strong> Role até o painel de <strong className="text-white">Usuários de teste</strong> (Test Users), clique no botão <strong className="text-yellow-300">+ ADD USERS</strong> e insira ambos os e-mails:
-                      </p>
-                      <div className="bg-zinc-950 p-2 rounded-lg font-mono text-[9.5px] border border-white/10 text-cyan-300 select-all space-y-0.5">
-                        <div>kawanyuri35@gmail.com</div>
-                        <div>eukoosh@gmail.com</div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+                          Título do Spoiler (Opcional - Buscaremos se colar HTML)
+                        </label>
+                        <input 
+                          type="text"
+                          value={localPasteTitle}
+                          onChange={(e) => setLocalPasteTitle(e.target.value)}
+                          placeholder="Ex: SPOILER REVELADO: Nova Atualização do PK XD!"
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs font-semibold text-white focus:outline-none focus:border-pink-500"
+                        />
                       </div>
-                      <p>
-                        <strong className="text-pink-400">Passo 5:</strong> Clique em <strong className="text-white">Salvar / Confirmar</strong>. Prontinho! O Google vai habilitar o login de vocês. Ao clicar em Conectar acima, basta prosseguir clicando no link <strong className="text-yellow-300">"Configurações Avançadas" &gt; "Acessar (não seguro)"</strong> no alerta do Google.
-                      </p>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+                          Conteúdo Copiado do E-mail (Texto ou Código Fonte/HTML)
+                        </label>
+                        <textarea 
+                          rows={4}
+                          value={localPasteContent}
+                          onChange={(e) => setLocalPasteContent(e.target.value)}
+                          placeholder="Cole aqui todo o texto ou código HTML copiado de dentro do seu e-mail do Gmail recebido..."
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs font-sans text-gray-300 focus:outline-none focus:border-pink-500"
+                        />
+                      </div>
+
+                      {localImportStatus && (
+                        <div className={`p-3 rounded-xl text-xs font-sans ${
+                          localImportStatus.startsWith('❌') 
+                            ? 'bg-red-500/15 border border-red-500/20 text-red-300' 
+                            : 'bg-emerald-500/15 border border-emerald-500/20 text-emerald-300 animate-pulse'
+                        }`}>
+                          {localImportStatus}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => { setShowLocalImport(false); setLocalImportStatus(null); playTapSound(); }}
+                          className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs uppercase font-black cursor-pointer border border-zinc-750 transition-colors"
+                        >
+                          Cancelar ✕
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={handleLocalPasteImport}
+                          className="flex-1 py-2 bg-gradient-to-r from-pink-500 to-violet-600 hover:from-pink-400 hover:to-violet-500 text-white rounded-xl text-xs uppercase font-black cursor-pointer shadow-lg active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                        >
+                          📥 Importar & Formatar Texto para o Editor!
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Collapsible Step-by-Step Fix Guide for Gmail Verification Blocker */}
+                {!gmailToken && (
+                  <div className="space-y-3">
+                    <div className="bg-red-950/20 border border-red-500/25 rounded-2xl p-4 text-left space-y-3">
+                      <div className="flex items-start gap-2.5">
+                        <AlertTriangle className="w-4.5 h-4.5 text-yellow-300 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h5 className="font-sans font-black text-xs text-yellow-300 uppercase leading-tight tracking-tight">
+                            ⚠️ "ACESSO BLOQUEADO" ou "POPUP FECHADO" NO LOGIN?
+                          </h5>
+                          <p className="text-[11px] text-gray-300 mt-1 leading-relaxed">
+                            O Gmail é altamento protegido pelo Google. Para permitir a conexão do e-mail <strong>eukoosh@gmail.com</strong> ou <strong>kawanyuri35@gmail.com</strong> no app privado <code>plasma-transmitter-gq7jp.firebaseapp.com</code>, siga as instruções abaixo:
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-2 text-[10.5px] font-sans text-gray-300 leading-relaxed max-h-[180px] overflow-y-auto">
+                        <p>
+                          <strong className="text-pink-400">Passo 1:</strong> Acesse o console do Google Cloud: <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold hover:text-cyan-300">console.cloud.google.com</a> logado na mesma conta administradora do Firebase.
+                        </p>
+                        <p>
+                          <strong className="text-pink-400">Passo 2:</strong> No menu superior (ao lado do logo do Google Cloud), clique no <strong className="text-white">Seletor de Projetos</strong> e certifique-se de abrir o projeto correto do seu app (ex: <code>plasma-transmitter-gq7jp</code>).
+                        </p>
+                        <p>
+                          <strong className="text-pink-400">Passo 3:</strong> Abra o menu de navegação ☰ e vá em <strong className="text-emerald-400">APIs e Serviços</strong> &gt; <strong className="text-emerald-400">Tela de consentimento OAuth</strong>.
+                        </p>
+                        <p>
+                          <strong className="text-pink-400">Passo 4:</strong> Role até o painel de <strong className="text-white">Usuários de teste</strong> (Test Users), clique no botão <strong className="text-yellow-300">+ ADD USERS</strong> e insira ambos os e-mails:
+                        </p>
+                        <div className="bg-zinc-950 p-2 rounded-lg font-mono text-[9.5px] border border-white/10 text-cyan-300 select-all space-y-0.5">
+                          <div>kawanyuri35@gmail.com</div>
+                          <div>eukoosh@gmail.com</div>
+                        </div>
+                        <p>
+                          <strong className="text-pink-400">Passo 5:</strong> Clique em <strong className="text-white">Salvar / Confirmar</strong>. Prontinho! O Google vai habilitar o login de vocês. Ao clicar em Conectar acima, basta prosseguir clicando no link <strong className="text-yellow-300">"Configurações Avançadas" &gt; "Acessar (não seguro)"</strong> no alerta do Google.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-indigo-950/25 border border-indigo-500/25 rounded-2xl p-4 text-left space-y-3">
+                      <div className="flex items-start gap-2.5">
+                        <Globe className="w-4.5 h-4.5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h5 className="font-sans font-black text-xs text-indigo-300 uppercase leading-tight tracking-tight">
+                            🌐 DOMÍNIO NÃO AUTORIZADO NO FIREBASE? (Passo a Passo)
+                          </h5>
+                          <p className="text-[11px] text-gray-300 mt-1 leading-relaxed">
+                            Se o site está hospedado em <strong>pkxdcentral.github.io</strong> ou em outros links personalizados, o Google impede a conexão do e-mail até que o domínio seja adicionado como autorizado. Resolva isso em 30 segundos no console Firebase:
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-2 text-[10.5px] font-sans text-gray-300 leading-relaxed">
+                        <p>
+                          <strong className="text-indigo-400">Passo 1:</strong> Abra o console do Firebase em: <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold hover:text-cyan-300">console.firebase.google.com</a>.
+                        </p>
+                        <p>
+                          <strong className="text-indigo-400">Passo 2:</strong> Clique no seu projeto <strong>plasma-transmitter-gq7jp</strong>.
+                        </p>
+                        <p>
+                          <strong className="text-indigo-400">Passo 3:</strong> No menu lateral esquerdo, acesse <strong className="text-emerald-400">Compilação (Build)</strong> &gt; <strong className="text-emerald-400">Authentication</strong>.
+                        </p>
+                        <p>
+                          <strong className="text-indigo-400">Passo 4:</strong> Clique na aba <strong className="text-white">Configurações (Settings)</strong> na parte superior da página.
+                        </p>
+                        <p>
+                          <strong className="text-indigo-400">Passo 5:</strong> No menu vertical à esquerda, clique em <strong className="text-yellow-300">Domínios autorizados (Authorized domains)</strong>.
+                        </p>
+                        <p>
+                          <strong className="text-indigo-400">Passo 6:</strong> Clique em <strong className="text-white">Adicionar domínio (Add domain)</strong>, digite exatamente <code className="text-cyan-300 bg-zinc-950 px-1.5 py-0.5 rounded select-all">pkxdcentral.github.io</code> (ou qualquer outro domínio onde o site esteja rodando) e clique em <strong className="text-white">Adicionar</strong>.
+                        </p>
+                        <p className="text-emerald-400 font-semibold mt-1.5 flex items-center gap-1">
+                          ✨ Prontinho! A conexão de e-mail e login com o Google vão funcionar na hora sem dar erros de domínio!
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
