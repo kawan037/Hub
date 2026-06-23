@@ -305,29 +305,7 @@ export default function App() {
       });
   }, []);
 
-  // Dynamically update site favicon to match the site logo URL (or fallback)
-  useEffect(() => {
-    let logoIconUrl = siteLogoUrl;
-    // Fallback if logo is empty or is a non-direct Google Photos sharing link
-    if (!logoIconUrl || logoIconUrl.includes("photos.app.goo.gl") || logoIconUrl.includes("google.com/photos")) {
-      logoIconUrl = "./favicon.svg";
-    }
-    
-    if (logoIconUrl) {
-      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = logoIconUrl;
-      if (logoIconUrl.endsWith('.svg')) {
-        link.setAttribute('type', 'image/svg+xml');
-      } else {
-        link.removeAttribute('type');
-      }
-    }
-  }, [siteLogoUrl]);
+  // Favicon dynamic injection removed as requested by user
 
   // Realtime Firebase news listener
   useEffect(() => {
@@ -1721,7 +1699,7 @@ export default function App() {
                         Você está autenticado como leitor de email <span className="font-mono text-white underline">{maskEmail(user.email)}</span>, mas seu usuário não possui permissão de escrita de administrador no sistema. 
                       </p>
                       <p className="text-gray-400">
-                        Se você for o proprietário deste portal, por favor faça login com o endereço de email do Administrador PK XD Central correspondente.
+                        Se você for o proprietário deste portal, por favor faça login com o endereço de email do Administrador do PKXD Hub correspondente.
                       </p>
                     </div>
                   ) : (
@@ -2077,7 +2055,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <Star className="w-5 h-5 text-yellow-300 fill-yellow-300" />
             <h3 className="font-sans font-black text-xl text-white uppercase tracking-wide">
-              Sobre o PK XD Central
+              Sobre o PKXD Hub
             </h3>
           </div>
           
@@ -2379,7 +2357,7 @@ export default function App() {
                       setHasNotificationPermission(perm === 'granted');
                       if (perm === 'granted') {
                         triggerAudio('success');
-                        new Notification('Portal PKXD Central 🔔', {
+                        new Notification('Portal PKXD Hub 🔔', {
                           body: 'Notificações ativas com sucesso! Você receberá alertas de novos spoilers e códigos.',
                         });
                       }

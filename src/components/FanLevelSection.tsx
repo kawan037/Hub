@@ -460,10 +460,7 @@ export default function FanLevelSection({
   };
 
   return (
-    <section id="fan-level-dashboard" className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-8 text-left relative overflow-hidden">
-      {/* Glow visual backdrops */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-orange-600/5 rounded-full filter blur-2xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-40 h-40 bg-pink-600/5 rounded-full filter blur-2xl pointer-events-none" />
+    <section id="fan-level-dashboard" className="bg-zinc-900 border border-white/5 rounded-3xl p-6 sm:p-8 space-y-8 text-left relative overflow-hidden">
 
       {/* Dynamic Gaining Alert Alert */}
       {notif && (
