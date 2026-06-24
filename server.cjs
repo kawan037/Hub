@@ -200,6 +200,15 @@ ${textToAnalyze}
   }
 });
 async function startServer() {
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api") || import_path.default.extname(req.path)) {
+      return next();
+    }
+    if (process.env.NODE_ENV !== "production") {
+      req.url = "/";
+    }
+    next();
+  });
   if (process.env.NODE_ENV !== "production") {
     const vite = await (0, import_vite.createServer)({
       server: { middlewareMode: true },
