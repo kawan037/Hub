@@ -1502,9 +1502,9 @@ export default function App() {
     <div id="pkxd-app-root" className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-yellow-400 selection:text-black pb-16 relative overflow-x-hidden bg-pkxd-texture">
       
       {/* Premium ambient space backdrop glows */}
-      <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full filter blur-[120px] pointer-events-none select-none" />
-      <div className="absolute bottom-1/3 left-[5%] w-[450px] h-[450px] bg-pink-500/10 rounded-full filter blur-[150px] pointer-events-none select-none" />
-      <div className="absolute top-[80%] right-[5%] w-[400px] h-[400px] bg-cyan-400/10 rounded-full filter blur-[140px] pointer-events-none select-none" />
+      <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, rgba(124, 18, 235, 0.12) 0%, rgba(124, 18, 235, 0) 70%)' }} />
+      <div className="absolute bottom-1/3 left-[5%] w-[450px] h-[450px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, rgba(255, 0, 122, 0.1) 0%, rgba(255, 0, 122, 0) 70%)' }} />
+      <div className="absolute top-[80%] right-[5%] w-[400px] h-[400px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, rgba(0, 240, 255, 0) 70%)' }} />
 
       {/* Upper Micro banner for System Alerts/Gamer Levels */}
       <div className="bg-gradient-to-r from-purple-800 via-pink-600 to-purple-900 py-2.5 px-4 text-center text-white text-xs font-bold leading-tight flex flex-wrap items-center justify-center gap-3 shadow-md relative z-30 select-none border-b-2 border-white/10">
@@ -1668,48 +1668,50 @@ export default function App() {
       </nav>
 
       {/* Hero Header Area */}
-      <header id="masthead-hero" className="relative overflow-hidden py-12 md:py-16 px-4 bg-gradient-to-b from-purple-800/45 via-slate-950/80 to-slate-950 select-none">
-        
-        {/* Neon Glow spots */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-72 h-72 bg-purple-500/20 rounded-full filter blur-3xl pointer-events-none" />
-        
-        <div className="max-w-3xl mx-auto text-center space-y-4 relative z-10">
+      {!isApplicationsRoute && (
+        <header id="masthead-hero" className="relative overflow-hidden py-12 md:py-16 px-4 bg-gradient-to-b from-purple-800/45 via-slate-950/80 to-slate-950 select-none">
           
-          {/* Logo badge / Floating decoration */}
-          <div className="inline-flex items-center gap-2 bg-pink-500/10 border-2 border-pink-500/40 px-4 py-1.5 rounded-full text-pink-400 font-mono text-[11px] font-extrabold uppercase tracking-widest animate-pulse">
-            <Gamepad2 className="w-4 h-4 fill-pink-400" />
-            Parceiro Fã Clube Oficial
+          {/* Neon Glow spots */}
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-72 h-72 bg-purple-500/20 rounded-full filter blur-3xl pointer-events-none" />
+          
+          <div className="max-w-3xl mx-auto text-center space-y-4 relative z-10">
+            
+            {/* Logo badge / Floating decoration */}
+            <div className="inline-flex items-center gap-2 bg-pink-500/10 border-2 border-pink-500/40 px-4 py-1.5 rounded-full text-pink-400 font-mono text-[11px] font-extrabold uppercase tracking-widest animate-pulse">
+              <Gamepad2 className="w-4 h-4 fill-pink-400" />
+              Parceiro Fã Clube Oficial
+            </div>
+
+            {/* Headline Display */}
+            <h2 className="font-sans font-black text-3xl sm:text-5xl md:text-6xl tracking-tight text-white uppercase leading-[1.1] drop-shadow-[0_2px_10px_rgba(34,211,238,0.2)]">
+              O Universo de PK XD <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300">
+                Na Velocidade Máxima!
+              </span>
+            </h2>
+
+            {/* Subtitle description */}
+            <p className="font-sans text-sm sm:text-base text-gray-300 leading-relaxed max-w-xl mx-auto">
+              Seja bem-vindo ao portal fan-hub do <strong>PKXD Hub</strong>! Fique ligado nas datas, resgate as joias secretas, junte-se à nossa gigante comunidade do WhatsApp e veja as revelações de spoilers toda segunda-feira.
+            </p>
+
+            {/* WhatsApp Direct CTA mini-badge */}
+            <div className="pt-2 flex flex-wrap justify-center gap-3">
+              <a 
+                href={WHATSAPP_CHANNEL_URL}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => triggerAudio('levelUp')}
+                className="inline-flex items-center gap-2 bg-[#25D366]/20 border-2 border-[#25D366]/60 text-[#25D366] font-sans font-black text-xs p-2.5 px-5 rounded-full hover:scale-[1.03] transition-all cursor-pointer shadow-lg"
+              >
+                <MessageCircle className="w-4 h-4 fill-[#25D366]" />
+                Acessar Canal no WhatsApp! 🚀
+              </a>
+            </div>
+
           </div>
-
-          {/* Headline Display */}
-          <h2 className="font-sans font-black text-3xl sm:text-5xl md:text-6xl tracking-tight text-white uppercase leading-[1.1] drop-shadow-[0_2px_10px_rgba(34,211,238,0.2)]">
-            O Universo de PK XD <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300">
-              Na Velocidade Máxima!
-            </span>
-          </h2>
-
-          {/* Subtitle description */}
-          <p className="font-sans text-sm sm:text-base text-gray-300 leading-relaxed max-w-xl mx-auto">
-            Seja bem-vindo ao portal fan-hub do <strong>PKXD Hub</strong>! Fique ligado nas datas, resgate as joias secretas, junte-se à nossa gigante comunidade do WhatsApp e veja as revelações de spoilers toda segunda-feira.
-          </p>
-
-          {/* WhatsApp Direct CTA mini-badge */}
-          <div className="pt-2 flex flex-wrap justify-center gap-3">
-            <a 
-              href={WHATSAPP_CHANNEL_URL}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => triggerAudio('levelUp')}
-              className="inline-flex items-center gap-2 bg-[#25D366]/20 border-2 border-[#25D366]/60 text-[#25D366] font-sans font-black text-xs p-2.5 px-5 rounded-full hover:scale-[1.03] transition-all cursor-pointer shadow-lg"
-            >
-              <MessageCircle className="w-4 h-4 fill-[#25D366]" />
-              Acessar Canal no WhatsApp! 🚀
-            </a>
-          </div>
-
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Grid Area */}
       <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 space-y-12">
@@ -2024,6 +2026,11 @@ export default function App() {
             onAddXP={handleAddFanXP}
             soundEnabled={soundEnabled}
             user={user}
+            isAdmin={isAdmin}
+            onAddNews={handleAddNews}
+            onAddShort={handleAddShort}
+            onAddTheory={handleAddTheory}
+            onAddFeaturedVideo={handleAddFeaturedVideo}
           />
         ) : (
           <>
