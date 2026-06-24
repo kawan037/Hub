@@ -10,6 +10,7 @@ import TheoriesSection from './components/TheoriesSection';
 import BestShorts from './components/BestShorts';
 import FanLevelSection from './components/FanLevelSection';
 import PastSpoilersSection from './components/PastSpoilersSection';
+import ApplicationsSection from './components/ApplicationsSection';
 import { 
   Sparkles, 
   Settings, 
@@ -192,12 +193,49 @@ export default function App() {
     }
     return 0;
   });
+
+  // Simple robust state-based path router supporting browser navigation and deep linking
+  const [currentPath, setCurrentPath] = useState(() => {
+    try {
+      const p = decodeURIComponent(window.location.pathname);
+      return p;
+    } catch (e) {
+      return window.location.pathname;
+    }
+  });
+
+  const navigateTo = (path: string) => {
+    try {
+      window.history.pushState({}, '', path);
+      setCurrentPath(path);
+      // scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      try {
+        const p = decodeURIComponent(window.location.pathname);
+        setCurrentPath(p);
+      } catch (e) {
+        setCurrentPath(window.location.pathname);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   
   const [newsToEdit, setNewsToEdit] = useState<NewsItem | null>(null);
   const [notifMessage, setNotifMessage] = useState<string | null>(null);
 
   // Dynamic scroll position state to make alert notifications scroll position responsive!
   const [scrollY, setScrollY] = useState(0);
+  const isApplicationsRoute = currentPath.toLowerCase().includes('inscric') || 
+                               currentPath.toLowerCase().includes('inscriç') || 
+                               currentPath.toLowerCase().includes('inscricao');
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
@@ -1589,6 +1627,26 @@ export default function App() {
               )}
             </button>
 
+            {/* Page navigation tab */}
+            <button
+              onClick={() => {
+                triggerAudio('tap');
+                if (isApplicationsRoute) {
+                  navigateTo('/Hub/');
+                } else {
+                  navigateTo('/Inscrições/');
+                }
+              }}
+              className={`p-2.5 px-3 sm:px-4 rounded-2xl border font-sans text-[11px] font-black tracking-wide uppercase transition-all duration-150 cursor-pointer flex items-center gap-1.5 shadow-md ${
+                isApplicationsRoute
+                  ? 'bg-gradient-to-r from-cyan-400 to-teal-400 text-purple-950 border-cyan-300 hover:brightness-110'
+                  : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-400 hover:brightness-110'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>{isApplicationsRoute ? 'Voltar ao Hub' : 'Inscrições 📝'}</span>
+            </button>
+
             {/* Admin toggle Button design */}
             <button
               onClick={() => {
@@ -1960,6 +2018,15 @@ export default function App() {
           </div>
         )}
 
+        {isApplicationsRoute ? (
+          <ApplicationsSection 
+            onBackToHub={() => navigateTo('/Hub/')}
+            onAddXP={handleAddFanXP}
+            soundEnabled={soundEnabled}
+            user={user}
+          />
+        ) : (
+          <>
         {/* Dynamic Countdown clock Widget with optional alternative timer */}
         {(() => {
           // Check if the current spoiler highlight is active
@@ -2162,6 +2229,8 @@ export default function App() {
 
           </div>
         </div>
+        </>
+        )}
 
       </main>
 

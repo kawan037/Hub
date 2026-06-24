@@ -87,5 +87,31 @@ service cloud.firestore {
                                || (request.resource != null && request.resource.data != null && 'admin_secret' in request.resource.data && request.resource.data.admin_secret == "pkxd2026_super_secret_admin_key");
       allow delete: if isDeletable();
     }
+
+    // Applications rules
+    match /applications_panel/{appId} {
+      allow read: if isDeletable() || isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
+      allow delete: if isDeletable() || isAdmin();
+    }
+    match /applications_shorts/{appId} {
+      allow read: if isDeletable() || isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
+      allow delete: if isDeletable() || isAdmin();
+    }
+    match /applications_theories/{appId} {
+      allow read: if isDeletable() || isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
+      allow delete: if isDeletable() || isAdmin();
+    }
+    match /applications_admin/{appId} {
+      allow read: if isDeletable() || isAdmin();
+      allow create: if true;
+      allow update: if isAdmin();
+      allow delete: if isDeletable() || isAdmin();
+    }
   }
 }

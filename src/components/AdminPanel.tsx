@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { NewsItem, FeaturedVideo, Theory, ShortItem, PastSpoiler } from '../types';
 import { 
   PlusCircle, Save, Sparkles, RefreshCw, X, Image, ExternalLink, Video, 
-  Smartphone, BookOpen, Clock, Wand2, Loader2, Play, BellRing, AlertTriangle, Globe
+  Smartphone, BookOpen, Clock, Wand2, Loader2, Play, BellRing, AlertTriangle, Globe,
+  UserCheck, Trash2, CheckCircle
 } from 'lucide-react';
 import { playTapSound, playSuccessSound } from '../utils/audio';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -48,7 +50,7 @@ interface AdminPanelProps {
   onDeleteActiveSpoiler?: () => void;
 }
 
-type TabType = 'news' | 'spoiler' | 'featured' | 'theories' | 'shorts' | 'extratimer' | 'push' | 'logo';
+type TabType = 'news' | 'spoiler' | 'featured' | 'theories' | 'shorts' | 'extratimer' | 'push' | 'logo' | 'applications';
 
 // Helper to parse standard **bold** markers into strong tags for previews
 function parseBoldPreviewText(inputText: string): React.ReactNode {
@@ -276,6 +278,44 @@ export default function AdminPanel({
   const [localPasteTitle, setLocalPasteTitle] = useState('');
   const [localPasteContent, setLocalPasteContent] = useState('');
   const [localImportStatus, setLocalImportStatus] = useState<string | null>(null);
+
+  // Applications list states
+  const [appsPanel, setAppsPanel] = useState<any[]>([]);
+  const [appsShorts, setAppsShorts] = useState<any[]>([]);
+  const [appsTheories, setAppsTheories] = useState<any[]>([]);
+  const [appsAdmin, setAppsAdmin] = useState<any[]>([]);
+  const [isAppsLoading, setIsAppsLoading] = useState(false);
+
+  const fetchAllApplications = async () => {
+    setIsAppsLoading(true);
+    try {
+      const panelSnap = await getDocs(collection(db, 'applications_panel'));
+      const panelList = panelSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAppsPanel(panelList);
+
+      const shortsSnap = await getDocs(collection(db, 'applications_shorts'));
+      const shortsList = shortsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAppsShorts(shortsList);
+
+      const theoriesSnap = await getDocs(collection(db, 'applications_theories'));
+      const theoriesList = theoriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAppsTheories(theoriesList);
+
+      const adminSnap = await getDocs(collection(db, 'applications_admin'));
+      const adminList = adminSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAppsAdmin(adminList);
+    } catch (err) {
+      console.error("Erro ao carregar inscrições no AdminPanel:", err);
+    } finally {
+      setIsAppsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'applications' && isOpen) {
+      fetchAllApplications();
+    }
+  }, [activeTab, isOpen]);
 
   // Decode Base64URL to Unicode standard string safely
   const decodeBase64Url = (str: string): string => {
@@ -1371,6 +1411,20 @@ export default function AdminPanel({
               }`}
             >
               🖼️ Logo
+            </button>
+            <button
+              type="button"
+              onClick={() => { playTapSound(); setActiveTab('applications'); }}
+              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer relative ${
+                activeTab === 'applications' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
+              }`}
+            >
+              📝 Inscrições ({appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length})
+              {(appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length) > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center animate-bounce">
+                  {appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length}
+                </span>
+              )}
             </button>
 
             <button
@@ -2647,6 +2701,340 @@ export default function AdminPanel({
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* TAB: Inscrições do Usuário */}
+          {activeTab === 'applications' && (
+            <div className="space-y-6 text-left">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <div>
+                  <h4 className="font-sans font-black text-sm uppercase text-yellow-300">
+                    📥 GERENCIAR INSCRIÇÕES DA COMUNIDADE
+                  </h4>
+                  <p className="text-[11px] text-gray-400 font-sans leading-relaxed">
+                    Veja os pedidos de destaque de vídeos, shorts, teorias e candidaturas de novos administradores enviados pelos usuários.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isAppsLoading}
+                  onClick={fetchAllApplications}
+                  className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-gray-300 rounded-xl text-xs font-bold border border-white/5 cursor-pointer flex items-center gap-1.5"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isAppsLoading ? 'animate-spin' : ''}`} />
+                  <span>{isAppsLoading ? 'Atualizando...' : 'Atualizar'}</span>
+                </button>
+              </div>
+
+              {isAppsLoading ? (
+                <div className="py-12 text-center space-y-2">
+                  <Loader2 className="w-8 h-8 text-yellow-400 mx-auto animate-spin" />
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-mono">Carregando inscrições de banco de dados...</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  
+                  {/* Category 1: Destaque de Vídeo */}
+                  <div className="space-y-3">
+                    <h5 className="font-sans font-black text-xs text-purple-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-purple-500/10 pb-1.5">
+                      <Video className="w-4 h-4" />
+                      <span>Destaques no Painel de Vídeos ({appsPanel.length})</span>
+                    </h5>
+                    
+                    {appsPanel.length === 0 ? (
+                      <p className="text-xs text-gray-500 italic">Nenhuma inscrição de destaque de vídeo pendente.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3.5">
+                        {appsPanel.map((item) => (
+                          <div key={item.id} className="bg-black/40 border border-zinc-850 p-4 rounded-xl space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <span className="font-bold text-gray-200">Criador: <strong className="text-purple-300">{item.creator}</strong></span>
+                              <span className="text-[10px] text-gray-400 font-mono">Social: {item.social || 'Não informado'}</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 block font-mono">Link do Conteúdo:</span>
+                              <a href={item.url} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:underline flex items-center gap-1">
+                                {item.url} <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 block font-mono">Descrição/Apresentação:</span>
+                              <p className="text-xs text-gray-300 bg-zinc-950/50 p-2.5 rounded-lg leading-relaxed">{item.description}</p>
+                            </div>
+                            <div className="flex items-center gap-2 justify-end pt-1.5 border-t border-white/5">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  playTapSound();
+                                  try {
+                                    onAddNews({
+                                      title: `Live de ${item.creator}! 🎬`,
+                                      excerpt: item.description,
+                                      content: item.url,
+                                      category: 'codes',
+                                      imageUrl: '',
+                                      date: 'Hoje',
+                                      author: item.creator
+                                    });
+                                    await deleteDoc(doc(db, 'applications_panel', item.id));
+                                    showStatus('Vídeo de destaque aprovado e publicado com sucesso! 🎉');
+                                    playSuccessSound();
+                                    fetchAllApplications();
+                                  } catch (err: any) {
+                                    alert('Erro ao aprovar: ' + err.message);
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-emerald-550/20 hover:bg-emerald-550/30 text-emerald-400 rounded-lg text-xs font-black border border-emerald-500/30 flex items-center gap-1 cursor-pointer"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>Aprovar no Painel</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  playTapSound();
+                                  if (confirm('Deseja excluir esta inscrição permanentemente?')) {
+                                    try {
+                                      await deleteDoc(doc(db, 'applications_panel', item.id));
+                                      showStatus('Inscrição excluída.');
+                                      fetchAllApplications();
+                                    } catch (err: any) {
+                                      alert(err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-black border border-red-500/20 flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Excluir</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Category 2: Destaque de Shorts */}
+                  <div className="space-y-3">
+                    <h5 className="font-sans font-black text-xs text-cyan-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-cyan-500/10 pb-1.5">
+                      <Smartphone className="w-4 h-4" />
+                      <span>Destaques de Shorts ({appsShorts.length})</span>
+                    </h5>
+                    
+                    {appsShorts.length === 0 ? (
+                      <p className="text-xs text-gray-500 italic">Nenhuma inscrição de destaque de shorts pendente.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3.5">
+                        {appsShorts.map((item) => (
+                          <div key={item.id} className="bg-black/40 border border-zinc-850 p-4 rounded-xl space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <span className="font-bold text-gray-200">Canal: <strong className="text-cyan-300">{item.creator}</strong></span>
+                              <span className="text-xs font-semibold text-white">Título: "{item.title}"</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 block font-mono">Link do Shorts:</span>
+                              <a href={item.url} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:underline flex items-center gap-1">
+                                {item.url} <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                            <div className="flex items-center gap-2 justify-end pt-1.5 border-t border-white/5">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  playTapSound();
+                                  try {
+                                    onAddShort({
+                                      title: item.title,
+                                      youtubeUrl: item.url
+                                    });
+                                    await deleteDoc(doc(db, 'applications_shorts', item.id));
+                                    showStatus('Short de destaque aprovado e publicado com sucesso! 📱');
+                                    playSuccessSound();
+                                    fetchAllApplications();
+                                  } catch (err: any) {
+                                    alert('Erro ao aprovar: ' + err.message);
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-emerald-550/20 hover:bg-emerald-550/30 text-emerald-400 rounded-lg text-xs font-black border border-emerald-500/30 flex items-center gap-1 cursor-pointer"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>Aprovar Shorts</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  playTapSound();
+                                  if (confirm('Deseja excluir esta inscrição?')) {
+                                    try {
+                                      await deleteDoc(doc(db, 'applications_shorts', item.id));
+                                      showStatus('Inscrição excluída.');
+                                      fetchAllApplications();
+                                    } catch (err: any) {
+                                      alert(err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-black border border-red-500/20 flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Excluir</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Category 3: Teorias Enviadas */}
+                  <div className="space-y-3">
+                    <h5 className="font-sans font-black text-xs text-pink-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-pink-500/10 pb-1.5">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Teorias Enviadas ({appsTheories.length})</span>
+                    </h5>
+                    
+                    {appsTheories.length === 0 ? (
+                      <p className="text-xs text-gray-500 italic">Nenhuma teoria enviada pendente.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3.5">
+                        {appsTheories.map((item) => (
+                          <div key={item.id} className="bg-black/40 border border-zinc-850 p-4 rounded-xl space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <span className="font-bold text-gray-200">Autor: <strong className="text-pink-300">{item.author}</strong></span>
+                              <span className="text-xs font-bold text-white">Título: "{item.title}"</span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 block font-mono">Conteúdo da Teoria:</span>
+                              <p className="text-xs text-gray-300 bg-zinc-950/50 p-2.5 rounded-lg leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                            </div>
+                            <div className="flex items-center gap-2 justify-end pt-1.5 border-t border-white/5">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  playTapSound();
+                                  try {
+                                    onAddTheory({
+                                      title: item.title,
+                                      content: item.content,
+                                      author: item.author
+                                    });
+                                    await deleteDoc(doc(db, 'applications_theories', item.id));
+                                    showStatus('Teoria aprovada e publicada com sucesso! 🔮');
+                                    playSuccessSound();
+                                    fetchAllApplications();
+                                  } catch (err: any) {
+                                    alert('Erro ao aprovar: ' + err.message);
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-emerald-550/20 hover:bg-emerald-550/30 text-emerald-400 rounded-lg text-xs font-black border border-emerald-500/30 flex items-center gap-1 cursor-pointer"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>Aprovar Teoria</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  playTapSound();
+                                  if (confirm('Deseja excluir esta teoria?')) {
+                                    try {
+                                      await deleteDoc(doc(db, 'applications_theories', item.id));
+                                      showStatus('Teoria excluída.');
+                                      fetchAllApplications();
+                                    } catch (err: any) {
+                                      alert(err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-black border border-red-500/20 flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Excluir</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Category 4: Candidaturas ADM */}
+                  <div className="space-y-3">
+                    <h5 className="font-sans font-black text-xs text-yellow-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-yellow-500/10 pb-1.5">
+                      <UserCheck className="w-4 h-4" />
+                      <span>Candidaturas para ADM ({appsAdmin.length})</span>
+                    </h5>
+                    
+                    {appsAdmin.length === 0 ? (
+                      <p className="text-xs text-gray-500 italic">Nenhuma candidatura de administrador pendente.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3.5">
+                        {appsAdmin.map((item) => (
+                          <div key={item.id} className="bg-black/40 border border-zinc-850 p-4 rounded-xl space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                              <div>
+                                <span className="text-[10px] uppercase font-bold text-gray-450 block font-mono">Nome / Nick:</span>
+                                <strong className="text-yellow-300 font-bold">{item.name}</strong>
+                              </div>
+                              <div>
+                                <span className="text-[10px] uppercase font-bold text-gray-450 block font-mono">Idade:</span>
+                                <span className="text-gray-200">{item.age} anos</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] uppercase font-bold text-gray-450 block font-mono">Contato:</span>
+                                <span className="text-cyan-400 font-semibold">{item.contact}</span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                              <div className="col-span-1 md:col-span-1">
+                                <span className="text-[10px] uppercase font-bold text-gray-450 block font-mono">Horas por Semana:</span>
+                                <span className="text-gray-300">{item.hours}</span>
+                              </div>
+                              <div className="col-span-1 md:col-span-2">
+                                <span className="text-[10px] uppercase font-bold text-gray-450 block font-mono">Por que quer ser Admin?</span>
+                                <p className="text-xs text-gray-300 bg-zinc-950/50 p-2.5 rounded-lg leading-relaxed whitespace-pre-wrap">{item.reason}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 justify-end pt-1.5 border-t border-white/5">
+                              <a
+                                href={`https://api.whatsapp.com/send?phone=${encodeURIComponent(item.contact)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => playTapSound()}
+                                className="px-3 py-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 rounded-lg text-xs font-black border border-yellow-400/20 flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>Contatar Candidato</span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  playTapSound();
+                                  if (confirm('Deseja excluir esta candidatura?')) {
+                                    try {
+                                      await deleteDoc(doc(db, 'applications_admin', item.id));
+                                      showStatus('Candidatura excluída.');
+                                      fetchAllApplications();
+                                    } catch (err: any) {
+                                      alert(err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-black border border-red-500/20 flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Excluir</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
             </div>
           )}
 

@@ -46,16 +46,16 @@ export default function PromoCodeRedeemer({ videos, isAdmin, onDeleteVideo, onEd
             </div>
             <div>
               <h3 className="font-sans font-black text-xl sm:text-2xl tracking-wide uppercase text-white">
-                CENTRAL DE LIVES & VÍDEOS DE CÓDIGOS
+                PAINEL DE DESTAQUES DO SITE
               </h3>
               <p className="font-sans text-xs text-amber-300">
-                Acompanhe os criadores oficiais de PK XD que estão liberando códigos em tempo real!
+                Vídeos e transmissões da comunidade em destaque recomendados oficialmente pelo PKXD Hub!
               </p>
             </div>
           </div>
 
           <span className="font-mono text-[10px] font-black tracking-wider text-amber-400 bg-amber-950/50 px-3 py-1 rounded-full border border-amber-500/30 self-start sm:self-center">
-            {videos.length} CONTEÚDO{videos.length === 1 ? '' : 'S'} ATIVO{videos.length === 1 ? '' : 'S'}
+            {videos.length} CONTEÚDO{videos.length === 1 ? '' : 'S'} EM DESTAQUE
           </span>
         </div>
 
@@ -63,7 +63,7 @@ export default function PromoCodeRedeemer({ videos, isAdmin, onDeleteVideo, onEd
         <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-start gap-3">
           <Zap className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="font-sans text-xs text-gray-300 leading-relaxed">
-            <strong className="text-amber-300">Como funciona?</strong> Os criadores de PK XD fazem lives e postam vídeos especiais liberando novos códigos surpresas. Assista aos conteúdos listados abaixo e, quando conseguir o seu código, use o botão dourado abaixo para resgatá-lo diretamente no site oficial de resgate!
+            <strong className="text-amber-300">Como funciona o Painel?</strong> Este é o Painel de Destaques do nosso site! Nós divulgamos vídeos e lives enviadas pela comunidade e selecionadas pela moderação. Assista aos conteúdos listados e, se você também quiser aparecer em destaque aqui, envie seu link na nossa página de Inscrições!
           </div>
         </div>
 
