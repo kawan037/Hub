@@ -1634,7 +1634,7 @@ export default function App() {
                 if (isApplicationsRoute) {
                   navigateTo('/Hub/');
                 } else {
-                  navigateTo('/Inscrições/');
+                  navigateTo('/inscricoes');
                 }
               }}
               className={`p-2.5 px-3 sm:px-4 rounded-2xl border font-sans text-[11px] font-black tracking-wide uppercase transition-all duration-150 cursor-pointer flex items-center gap-1.5 shadow-md ${
