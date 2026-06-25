@@ -85,28 +85,16 @@ service cloud.firestore {
 
     // Applications rules
     match /applications_panel/{appId} {
-      allow read: if isDeletable() || isAdmin();
-      allow create: if true;
-      allow update: if isAdmin();
-      allow delete: if isDeletable() || isAdmin();
+      allow read, write: if true;
     }
     match /applications_shorts/{appId} {
-      allow read: if isDeletable() || isAdmin();
-      allow create: if true;
-      allow update: if isAdmin();
-      allow delete: if isDeletable() || isAdmin();
+      allow read, write: if true;
     }
     match /applications_theories/{appId} {
-      allow read: if isDeletable() || isAdmin();
-      allow create: if true;
-      allow update: if isAdmin();
-      allow delete: if isDeletable() || isAdmin();
+      allow read, write: if true;
     }
     match /applications_admin/{appId} {
-      allow read: if isDeletable() || isAdmin();
-      allow create: if true;
-      allow update: if isAdmin();
-      allow delete: if isDeletable() || isAdmin();
+      allow read, write: if true;
     }
 
     // Comments rules

@@ -15,59 +15,28 @@ export default function GiftCountdown({
   enabled,
   giftContent
 }: GiftCountdownProps) {
-  const [timeLeft, setTimeLeft] = useState<{
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-    isOver: boolean;
-  }>(() => {
-    if (!enabled || !targetDate) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true };
-    }
-    const targetTime = new Date(targetDate).getTime();
-    const now = new Date().getTime();
-    const difference = targetTime - now;
-
-    if (difference <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true };
-    }
-
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-    return { days, hours, minutes, seconds, isOver: false };
-  });
-
+  const [ticker, setTicker] = useState(0);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!enabled || !targetDate) return;
 
-    const calculateTime = () => {
-      const targetTime = new Date(targetDate).getTime();
-      const now = new Date().getTime();
-      const difference = targetTime - now;
-
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true });
-        return;
-      }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds, isOver: false });
-    };
-
-    calculateTime();
-    const interval = setInterval(calculateTime, 1000);
+    const interval = setInterval(() => {
+      setTicker(t => t + 1);
+    }, 1000);
     return () => clearInterval(interval);
   }, [targetDate, enabled]);
+
+  const targetTime = targetDate ? new Date(targetDate).getTime() : 0;
+  const difference = targetTime - Date.now();
+  const isOver = !enabled || !targetDate || difference <= 0;
+
+  const days = Math.max(0, Math.floor(difference / (1000 * 60 * 60 * 24)));
+  const hours = Math.max(0, Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+  const minutes = Math.max(0, Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)));
+  const seconds = Math.max(0, Math.floor((difference % (1000 * 60)) / 1000));
+
+  const timeLeft = { days, hours, minutes, seconds, isOver };
 
   if (!enabled || !targetDate) return null;
 
