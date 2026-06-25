@@ -32,7 +32,8 @@ import {
   Compass,
   Menu,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 import { playTapSound, playLevelUpSound, playSuccessSound } from './utils/audio';
 
@@ -1496,6 +1497,21 @@ export default function App() {
     }
   };
 
+  // Delete notification handler (admin exclusive)
+  const handleDeleteNotification = async (id: string) => {
+    if (!checkAdminWritePermission()) return;
+    try {
+      await deleteDoc(doc(db, 'notifications', id));
+      triggerAudio('success');
+      setNotifMessage("✅ Notificação apagada do banco com sucesso! 🗑️");
+      setTimeout(() => setNotifMessage(null), 3500);
+    } catch (err: any) {
+      console.error("Error deleting notification:", err);
+      setNotifMessage(`❌ Erro ao apagar notificação: ${err?.message || String(err)}`);
+      setTimeout(() => setNotifMessage(null), 8000);
+    }
+  };
+
   // Clear / restore default backup list
   const handleResetToDefaults = async () => {
     if (!checkAdminWritePermission()) return;
@@ -2174,6 +2190,15 @@ export default function App() {
 
           return (
             <>
+              {giftCountdownEnabled && (
+                <GiftCountdown 
+                  title={giftCountdownTitle}
+                  targetDate={giftCountdownDate}
+                  enabled={giftCountdownEnabled}
+                  giftContent={giftCountdownContent}
+                />
+              )}
+
               <div className="max-w-4xl mx-auto" id="countdown-card-root">
                 <CountdownWidget 
                   spoilerTitle={spoilerTitle}
@@ -2672,7 +2697,7 @@ export default function App() {
                   return (
                     <div 
                       key={notif.id}
-                      className="p-4 bg-neutral-950/60 border border-white/10 rounded-2xl flex items-start gap-3 hover:border-white/20 transition-all shadow-inner"
+                      className="p-4 bg-neutral-950/60 border border-white/10 rounded-2xl flex items-start gap-3 hover:border-white/20 transition-all shadow-inner relative group"
                     >
                       <span className="text-xl leading-none select-none p-1.5 bg-white/5 rounded-xl block">
                         {icon}
@@ -2682,9 +2707,20 @@ export default function App() {
                           <h4 className="font-sans font-extrabold text-white text-xs sm:text-sm">
                             {notif.title}
                           </h4>
-                          <span className={`text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeColors}`}>
-                            {notif.type.replace('_', ' ')}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeColors}`}>
+                              {notif.type.replace('_', ' ')}
+                            </span>
+                            {isAdmin && (
+                              <button
+                                onClick={() => handleDeleteNotification(notif.id)}
+                                title="Apagar Notificação"
+                                className="p-1.5 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="font-sans text-xs text-gray-300 leading-relaxed">
                           {notif.body}
