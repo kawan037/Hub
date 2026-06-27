@@ -2599,8 +2599,8 @@ export default function App() {
 
       {/* CENTRAL DE NOTIFICAÇÕES OVERLAY */}
       {isNotifOverlayOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in" id="notifications-list-overlay">
-          <div className="bg-neutral-900 border-2 border-cyan-400 rounded-3xl p-6 sm:p-8 w-full max-w-2xl relative shadow-[0_0_30px_rgba(34,211,238,0.2)] my-8 text-left">
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-start sm:items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-fade-in" id="notifications-list-overlay">
+          <div className="bg-neutral-900 border-2 border-cyan-400 rounded-3xl p-5 sm:p-8 w-full max-w-2xl relative shadow-[0_0_30px_rgba(34,211,238,0.2)] my-4 sm:my-8 text-left">
             
             {/* Top Close Controls */}
             <button
@@ -2608,7 +2608,7 @@ export default function App() {
                 setIsNotifOverlayOpen(false);
                 triggerAudio('tap');
               }}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/15 text-white font-sans font-black text-xs uppercase p-2 py-2.5 rounded-lg border border-white/10 transition-all cursor-pointer shadow-md duration-150"
+              className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 active:scale-95 text-white font-sans font-black text-xs uppercase px-4 py-3 rounded-xl border border-red-400/20 transition-all cursor-pointer shadow-md duration-150 z-10 flex items-center justify-center min-h-[44px]"
             >
               Fechar ✕
             </button>
@@ -2765,10 +2765,19 @@ export default function App() {
             </div>
 
             {/* Quick footer action info */}
-            <div className="mt-6 pt-4 border-t border-white/10 text-center">
+            <div className="mt-6 pt-4 border-t border-white/10 text-center space-y-4">
               <span className="font-sans text-[10px] text-gray-500 italic block">
                 *Toda vez que o admin publica ou atrasa spoilers, uma notificação mundial é dispersada em tempo real!
               </span>
+              <button
+                onClick={() => {
+                  setIsNotifOverlayOpen(false);
+                  triggerAudio('tap');
+                }}
+                className="w-full py-3.5 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 active:scale-95 text-white font-sans font-black text-xs uppercase tracking-widest rounded-2xl border border-red-500/20 transition-all cursor-pointer shadow-lg flex items-center justify-center gap-1.5 min-h-[44px]"
+              >
+                Fechar Central de Alertas ✕
+              </button>
             </div>
           </div>
         </div>
