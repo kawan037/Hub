@@ -136,7 +136,7 @@ export default function ApplicationsSection({
 
   const handlePasscodeUnlock = () => {
     triggerAudio('tap');
-    const validPasscodes = ['pkxdcentral2026_portal_admin', 'kawanyuri_adm_seguro_99', 'central_pkxd_super_acesso_real'];
+    const validPasscodes = ['pkxdcentral2026_portal_admin', 'kawanyuri_adm_seguro_99', 'central_pkxd_super_acesso_real', 'bela12@!'];
     if (validPasscodes.includes(inputPasscode.trim())) {
       setIsComponentAdmin(true);
       setPasscodeError('');
