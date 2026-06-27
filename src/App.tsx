@@ -40,7 +40,7 @@ import { playTapSound, playLevelUpSound, playSuccessSound } from './utils/audio'
 // Import Firebase config & helpers
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, User, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 
 export const maskEmail = (email?: string | null): string => {
   if (!email) return '';
@@ -443,37 +443,39 @@ export default function App() {
     }
   }, []);
 
-  // Realtime Firebase news listener
+  // Firebase news listener (optimized to one-time fetch on load)
   useEffect(() => {
-    const newsRef = collection(db, 'news');
-    const unsubscribe = onSnapshot(newsRef, (snapshot) => {
-      let list: NewsItem[] = [];
-      snapshot.forEach((doc) => {
-        list.push(doc.data() as NewsItem);
-      });
-      
-      // Memory sort by id descending
-      list.sort((a, b) => {
-        const numA = parseInt(a.id);
-        const numB = parseInt(b.id);
-        if (!isNaN(numA) && !isNaN(numB)) {
-          return numB - numA;
+    const fetchNews = async () => {
+      try {
+        const newsRef = collection(db, 'news');
+        const snapshot = await getDocs(newsRef);
+        let list: NewsItem[] = [];
+        snapshot.forEach((doc) => {
+          list.push(doc.data() as NewsItem);
+        });
+        
+        // Memory sort by id descending
+        list.sort((a, b) => {
+          const numA = parseInt(a.id);
+          const numB = parseInt(b.id);
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return numB - numA;
+          }
+          return b.id.localeCompare(a.id);
+        });
+
+        if (list.length > 0) {
+          setNewsList(list);
+          localStorage.setItem('pkxd_central_news', JSON.stringify(list));
+        } else {
+          // Fallback to defaults
+          setNewsList(INITIAL_NEWS);
         }
-        return b.id.localeCompare(a.id);
-      });
-
-      if (list.length > 0) {
-        setNewsList(list);
-        localStorage.setItem('pkxd_central_news', JSON.stringify(list));
-      } else {
-        // Fallback to defaults
-        setNewsList(INITIAL_NEWS);
+      } catch (error) {
+        console.warn("Could not fetch news:", error);
       }
-    }, (error) => {
-      console.warn("Could not fetch real-time news:", error);
-    });
-
-    return () => unsubscribe();
+    };
+    fetchNews();
   }, []);
 
   // Realtime Firebase settings listener
@@ -731,68 +733,59 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isAdmin]);
 
-  // Realtime Featured Videos subscription
+  // Curated data loaders (optimized to fast one-time getDocs on mount for maximum performance)
   useEffect(() => {
-    const ref = collection(db, 'featured_videos');
-    const unsubscribe = onSnapshot(ref, (snapshot) => {
-      const list: FeaturedVideo[] = [];
-      snapshot.forEach(doc => {
-        list.push({ id: doc.id, ...doc.data() } as FeaturedVideo);
-      });
-      list.sort((a, b) => b.createdAt - a.createdAt);
-      setFeaturedList(list);
-    }, (error) => {
-      console.warn("Could not fetch featured videos:", error);
-    });
-    return () => unsubscribe();
-  }, []);
+    const fetchAllData = async () => {
+      try {
+        const vSnap = await getDocs(collection(db, 'featured_videos'));
+        const vList: FeaturedVideo[] = [];
+        vSnap.forEach(doc => {
+          vList.push({ id: doc.id, ...doc.data() } as FeaturedVideo);
+        });
+        vList.sort((a, b) => b.createdAt - a.createdAt);
+        setFeaturedList(vList);
+      } catch (err) {
+        console.warn("Could not fetch featured videos:", err);
+      }
 
-  // Realtime Theories subscription
-  useEffect(() => {
-    const ref = collection(db, 'theories');
-    const unsubscribe = onSnapshot(ref, (snapshot) => {
-      const list: Theory[] = [];
-      snapshot.forEach(doc => {
-        list.push({ id: doc.id, ...doc.data() } as Theory);
-      });
-      list.sort((a, b) => b.createdAt - a.createdAt);
-      setTheoriesList(list);
-    }, (error) => {
-      console.warn("Could not fetch theories:", error);
-    });
-    return () => unsubscribe();
-  }, []);
+      try {
+        const tSnap = await getDocs(collection(db, 'theories'));
+        const tList: Theory[] = [];
+        tSnap.forEach(doc => {
+          tList.push({ id: doc.id, ...doc.data() } as Theory);
+        });
+        tList.sort((a, b) => b.createdAt - a.createdAt);
+        setTheoriesList(tList);
+      } catch (err) {
+        console.warn("Could not fetch theories:", err);
+      }
 
-  // Realtime curated Shorts subscription
-  useEffect(() => {
-    const ref = collection(db, 'shorts');
-    const unsubscribe = onSnapshot(ref, (snapshot) => {
-      const list: ShortItem[] = [];
-      snapshot.forEach(doc => {
-        list.push({ id: doc.id, ...doc.data() } as ShortItem);
-      });
-      list.sort((a, b) => b.createdAt - a.createdAt);
-      setShortsList(list);
-    }, (error) => {
-      console.warn("Could not fetch shorts:", error);
-    });
-    return () => unsubscribe();
-  }, []);
+      try {
+        const sSnap = await getDocs(collection(db, 'shorts'));
+        const sList: ShortItem[] = [];
+        sSnap.forEach(doc => {
+          sList.push({ id: doc.id, ...doc.data() } as ShortItem);
+        });
+        sList.sort((a, b) => b.createdAt - a.createdAt);
+        setShortsList(sList);
+      } catch (err) {
+        console.warn("Could not fetch shorts:", err);
+      }
 
-  // Realtime Past Spoilers subscription
-  useEffect(() => {
-    const ref = collection(db, 'past_spoilers');
-    const unsubscribe = onSnapshot(ref, (snapshot) => {
-      const list: PastSpoiler[] = [];
-      snapshot.forEach(doc => {
-        list.push({ id: doc.id, ...doc.data() } as PastSpoiler);
-      });
-      list.sort((a, b) => b.createdAt - a.createdAt);
-      setPastSpoilers(list);
-    }, (error) => {
-      console.warn("Could not fetch past spoilers:", error);
-    });
-    return () => unsubscribe();
+      try {
+        const pSnap = await getDocs(collection(db, 'past_spoilers'));
+        const pList: PastSpoiler[] = [];
+        pSnap.forEach(doc => {
+          pList.push({ id: doc.id, ...doc.data() } as PastSpoiler);
+        });
+        pList.sort((a, b) => b.createdAt - a.createdAt);
+        setPastSpoilers(pList);
+      } catch (err) {
+        console.warn("Could not fetch past spoilers:", err);
+      }
+    };
+
+    fetchAllData();
   }, []);
 
   // Audio utility wrapper
