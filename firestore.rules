@@ -95,20 +95,16 @@ service cloud.firestore {
 
     // Applications rules
     match /applications_panel/{appId} {
-      allow read, delete: if isEmailAdmin() || isAdmin();
-      allow create, update: if true;
+      allow read, write: if true;
     }
     match /applications_shorts/{appId} {
-      allow read, delete: if isEmailAdmin() || isAdmin();
-      allow create, update: if true;
+      allow read, write: if true;
     }
     match /applications_theories/{appId} {
-      allow read, delete: if isEmailAdmin() || isAdmin();
-      allow create, update: if true;
+      allow read, write: if true;
     }
     match /applications_admin/{appId} {
-      allow read, delete: if isEmailAdmin() || isAdmin();
-      allow create, update: if true;
+      allow read, write: if true;
     }
 
     // Comments rules
