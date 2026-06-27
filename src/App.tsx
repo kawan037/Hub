@@ -2235,7 +2235,18 @@ export default function App() {
                 />
               </div>
 
-              {/* CANDIDATAR-SE A ADMIN BANNER - Placed exactly below the spoiler section as requested */}
+              {/* Featured YouTube Videos Section - Placed exactly under the spoilers section */}
+              <div className="max-w-4xl mx-auto" id="featured-videos-section-wrapper">
+                <FeaturedVideos 
+                  videos={featuredList}
+                  isAdmin={isAdmin}
+                  currentUser={user}
+                  onDelete={handleDeleteFeaturedVideo}
+                  onAddXP={handleAddFanXP}
+                />
+              </div>
+
+              {/* CANDIDATAR-SE A ADMIN BANNER - Placed exactly below the spoiler and featured videos section */}
               <div className="max-w-4xl mx-auto mt-8 mb-6 px-4 sm:px-0" id="admin-application-banner-under-spoilers">
                 <div className="bg-gradient-to-r from-purple-900/60 via-indigo-950/70 to-zinc-900 border-2 border-purple-500/30 rounded-2xl p-6 shadow-[0_4px_25px_rgba(139,92,246,0.15)] hover:shadow-[0_4px_35px_rgba(139,92,246,0.25)] hover:border-purple-500/50 transition-all duration-300 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
                   {/* Glowing neon side effect */}
@@ -2250,15 +2261,15 @@ export default function App() {
                     </p>
                   </div>
 
-                  <a 
-                    href="https://forms.gle/LGDPe1SrsTdcwNZCA"
-                    target="_blank" 
-                    rel="noreferrer"
-                    onClick={() => triggerAudio('tap')}
+                  <button 
+                    onClick={() => {
+                      triggerAudio('tap');
+                      navigateTo('/inscricoes#admin');
+                    }}
                     className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-650 hover:from-pink-400 hover:to-indigo-550 active:scale-[0.98] text-white font-sans font-black text-xs uppercase tracking-wider rounded-xl shadow-lg border border-white/20 cursor-pointer flex items-center justify-center gap-2 transition-all flex-shrink-0 animate-pulse hover:animate-none"
                   >
                     <span>🔐 Candidatar para Admin 🌟</span>
-                  </a>
+                  </button>
                 </div>
               </div>
             </>
@@ -2300,17 +2311,6 @@ export default function App() {
             isAdmin={isAdmin}
             onDeleteVideo={handleDeleteNews}
             onEditVideo={handleEditNewsRequest}
-          />
-        </div>
-
-        {/* Featured YouTube Videos Section */}
-        <div className="max-w-4xl mx-auto" id="featured-videos-section-wrapper">
-          <FeaturedVideos 
-            videos={featuredList}
-            isAdmin={isAdmin}
-            currentUser={user}
-            onDelete={handleDeleteFeaturedVideo}
-            onAddXP={handleAddFanXP}
           />
         </div>
 

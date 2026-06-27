@@ -15,6 +15,10 @@ interface FeaturedVideosProps {
 export default function FeaturedVideos({ videos, isAdmin, currentUser, onDelete, onAddXP }: FeaturedVideosProps) {
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
 
+  const mostRecentVideoId = videos.length > 0
+    ? [...videos].sort((a, b) => b.createdAt - a.createdAt)[0].id
+    : null;
+
   const toggleComments = (videoId: string) => {
     playTapSound();
     setOpenComments(prev => ({
@@ -88,12 +92,24 @@ export default function FeaturedVideos({ videos, isAdmin, currentUser, onDelete,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {videos.map((video) => {
             const embedId = getYoutubeEmbedId(video.youtubeUrl);
+            const isMostRecent = video.id === mostRecentVideoId;
 
             return (
               <div
                 key={video.id}
-                className="bg-black/35 border border-white/5 hover:border-indigo-500/30 rounded-2xl overflow-hidden flex flex-col justify-between group transition-all relative"
+                className={`bg-black/35 border rounded-2xl overflow-hidden flex flex-col justify-between group transition-all relative ${
+                  isMostRecent 
+                    ? 'border-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] ring-1 ring-amber-400/20' 
+                    : 'border-white/5 hover:border-indigo-500/30'
+                }`}
               >
+                {isMostRecent && (
+                  <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-1.5 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg shadow-[0_4px_12px_rgba(239,68,68,0.3)] border border-white/10 animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                    <span>⚡ AO VIVO/EM BREVE</span>
+                  </div>
+                )}
+
                 {/* Embed player or elegant placeholder */}
                 <div className="relative aspect-video bg-zinc-950 flex items-center justify-center overflow-hidden">
                   {embedId ? (

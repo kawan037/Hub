@@ -48,9 +48,29 @@ export default function ApplicationsSection({
   onAddTheory,
   onAddFeaturedVideo
 }: ApplicationsSectionProps) {
-  const [activeTab, setActiveTab] = useState<'panel' | 'shorts' | 'theory' | 'admin'>('panel');
+  const [activeTab, setActiveTab] = useState<'panel' | 'shorts' | 'theory' | 'admin'>(() => {
+    try {
+      if (window.location.hash.toLowerCase().includes('admin') || window.location.search.toLowerCase().includes('admin')) {
+        return 'admin';
+      }
+    } catch (e) {}
+    return 'panel';
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  useEffect(() => {
+    const checkHash = () => {
+      try {
+        if (window.location.hash.toLowerCase().includes('admin') || window.location.search.toLowerCase().includes('admin')) {
+          setActiveTab('admin');
+        }
+      } catch (e) {}
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
 
   // Admin Dashboard States
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
