@@ -8,65 +8,66 @@
 }
 
 .theme-neutral {
-  --glow-1: rgba(124, 58, 237, 0.04);  /* Subtle Purple Glow */
-  --glow-2: rgba(197, 168, 128, 0.06); /* Premium Gold Glow */
-  --glow-3: rgba(148, 163, 184, 0.04);  /* Silver Glow */
+  --glow-1: rgba(109, 40, 217, 0.05); /* Soft Purple Glow */
+  --glow-2: rgba(197, 168, 128, 0.08); /* Premium Gold Glow */
+  --glow-3: rgba(148, 163, 184, 0.05); /* Silver Glow */
 
-  background-color: #faf9f6 !important; /* Luxury warm ivory white background */
-  color: #1c1917 !important;
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
 
-  /* Premium Light Base Colors */
-  --color-slate-950: #faf9f6; /* Ivory White */
-  --color-slate-900: #f5f4f0; /* Soft Warm Gray */
-  --color-zinc-950: #faf9f6;
-  --color-zinc-900: #fcfbf9;  /* Crisp light card background */
-  --color-zinc-850: #eae8e1;
-  --color-zinc-800: #dfdbd3;
+  /* Theme color overrides for standard elements */
+  --color-slate-950: #ffffff; /* Fundo branco!!! */
+  --color-slate-900: #fcfbf9; /* Soft Ivory/Warm Gray */
+  --color-zinc-950: #ffffff;
+  --color-zinc-900: #fafaf9;  /* Elegant puffy card background */
+  --color-zinc-850: #f4f3ee;
+  --color-zinc-800: #e8e6df;
   --color-neutral-950: #ffffff;
-  --color-neutral-900: #fdfdfc;
-  --color-purple-950: #faf9f6;
-  --color-purple-900: #fbfaff; /* Soft white with micro purple tint */
-  --color-purple-800: #f5f3ff;
-  --color-purple-700: #ede9fe;
-  --color-purple-600: #6d28d9; /* Elegant deep violet (Roxo) */
+  --color-neutral-900: #fdfdfb;
+  --color-purple-950: #ffffff;
+  --color-purple-900: #f9f6ff; /* Extremely light cozy lavender */
+  --color-purple-800: #f3effe;
+  --color-purple-700: #e8e0ff;
+  --color-purple-600: #6d28d9; /* Deep royal violet */
   --color-purple-500: #7c3aed;
-  --color-indigo-950: #faf9f6;
+  --color-indigo-950: #ffffff;
   --color-indigo-900: #f8f6ff;
 
-  /* Typography Colors - Rich Charcoal/Deep Slate for elegant contrast */
-  --color-slate-100: #1c1917; 
+  /* Dark Charcoal/Espresso Black text for clean readability */
+  --color-slate-100: #1a1a1a; 
   --color-gray-100: #1c1917;
   --color-gray-200: #292524;
   --color-gray-300: #44403c;
   --color-gray-400: #57534e;
   --color-gray-500: #78716c;
 
-  /* Dourado (Premium Gold Accent) instead of bright yellow */
-  --color-yellow-400: #c5a880; /* Elegant soft gold */
-  --color-yellow-300: #b89753; /* Antique gold */
+  /* Dourado (Premium Gold Highlight) */
+  --color-yellow-400: #d4af37; /* Royal Metallic Gold */
+  --color-yellow-300: #c59b27; /* Antique Gold */
 
-  /* Prata (Silver Accent) instead of cyan */
-  --color-cyan-400: #94a3b8;   /* Sleek Platinum Silver */
+  /* Prata / Metal highlight */
+  --color-cyan-400: #94a3b8;   /* Sleek Platinum */
 
-  /* Roxo (Royal Violet Accent) */
-  --color-pink-500: #6d28d9;   /* Classic elegant violet */
-  --color-pink-400: #8b5cf6;   
+  /* Royal Purple Highlight */
+  --color-pink-500: #6d28d9;   
+  --color-pink-400: #7c3aed;   
 }
 
-/* Escritas pretas/charcoal com degradê suave para cor de metal */
-.theme-neutral h1:not(.keep-color),
-.theme-neutral h2:not(.keep-color),
+/* Escritas pretas com degradê suave para cor de metal (Sleek Chrome/Silver) */
+.theme-neutral h1,
+.theme-neutral h2,
 .theme-neutral h3:not(.keep-color),
 .theme-neutral .metal-text {
-  background: linear-gradient(135deg, #1c1917 0%, #44403c 45%, #78716c 100%) !important;
+  background: linear-gradient(135deg, #111111 0%, #4a5568 50%, #718096 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
   text-fill-color: transparent !important;
   display: inline-block;
+  font-family: "Fredoka", sans-serif !important;
 }
 
-/* Keep internal badge elements properly colored */
+/* Permit highlighted child elements to stand out with their colors */
 .theme-neutral h1 *,
 .theme-neutral h2 *,
 .theme-neutral h3 *,
@@ -78,48 +79,26 @@
   background: none !important;
 }
 
-/* Force rich legibility for body, paragraphs and standard lists */
+/* Body / General text styling - warm charcoal black, soft child-friendly rounded layout */
 .theme-neutral p,
-.theme-neutral span:not(.text-yellow-300):not(.text-yellow-400):not(.text-fuchsia-400):not(.text-pink-400):not(.text-purple-300):not(.text-emerald-300):not(.bg-purple-800 *):not(.bg-emerald-500 *):not(.bg-amber-500 *):not(.bg-gradient-to-r *):not(.text-white),
+.theme-neutral span:not(.text-yellow-300):not(.text-yellow-400):not(.text-fuchsia-400):not(.text-pink-400):not(.text-purple-300):not(.text-emerald-300):not(.text-white):not(.text-yellow-350):not(.font-mono),
 .theme-neutral li,
 .theme-neutral label,
 .theme-neutral input,
-.theme-neutral textarea,
-.theme-neutral .text-slate-50,
-.theme-neutral .text-slate-100,
-.theme-neutral .text-slate-200,
-.theme-neutral .text-slate-300,
-.theme-neutral .text-slate-400,
-.theme-neutral .text-gray-50,
-.theme-neutral .text-gray-100,
-.theme-neutral .text-gray-200,
-.theme-neutral .text-gray-300,
-.theme-neutral .text-gray-400,
-.theme-neutral .text-zinc-50,
-.theme-neutral .text-zinc-100,
-.theme-neutral .text-zinc-200,
-.theme-neutral .text-zinc-300,
-.theme-neutral .text-purple-50,
-.theme-neutral .text-purple-100,
-.theme-neutral .text-purple-200,
-.theme-neutral .text-purple-300,
-.theme-neutral .text-indigo-50,
-.theme-neutral .text-indigo-100,
-.theme-neutral .text-indigo-200,
-.theme-neutral .text-indigo-300 {
-  color: #292524 !important;
+.theme-neutral textarea {
+  color: #1f2937 !important;
 }
 
-/* Highlights: Elegant Dourado (Gold) */
+/* Golden Highlights & Highlights sections */
 .theme-neutral .text-yellow-300,
 .theme-neutral .text-yellow-400,
 .theme-neutral .text-yellow-350,
 .theme-neutral .text-amber-300,
 .theme-neutral .text-amber-400 {
-  color: #b89753 !important; /* Elegant refined gold */
+  color: #d4af37 !important; /* Rich Gold */
 }
 
-/* Rest: Elegant Roxo (Purple) */
+/* Royal Violet Highlights for "the rest" */
 .theme-neutral .text-pink-500,
 .theme-neutral .text-pink-400,
 .theme-neutral .text-purple-300,
@@ -127,42 +106,54 @@
 .theme-neutral .text-fuchsia-400,
 .theme-neutral .text-cyan-400,
 .theme-neutral .text-indigo-400 {
-  color: #6d28d9 !important; /* Premium Roxo */
+  color: #7c3aed !important; /* Royal Purple */
 }
 
-/* CONTAGEM REGRESSIVA - ULTRA ELEGANTE EM DOURADO METÁLICO & BRANCO */
+/* Bubbly, child-friendly cards in the neutral layout */
+.theme-neutral div.rounded-2xl,
+.theme-neutral div.rounded-3xl,
+.theme-neutral div.rounded-xl {
+  border-radius: 1.75rem !important;
+  border: 3px solid rgba(197, 168, 128, 0.15) !important;
+  box-shadow: 0 10px 25px -5px rgba(109, 40, 217, 0.04), 0 8px 16px -6px rgba(197, 168, 128, 0.05) !important;
+}
+
+/* CONTAGEM REGRESSIVA EM DOURADO METÁLICO CUTE (Balloon-block style) */
 .theme-neutral #gift-countdown-timer-clocks > div,
 .theme-neutral .grid-cols-4 > div {
-  background: linear-gradient(135deg, #ffffff 0%, #fdfcfb 100%) !important;
-  border: 1.5px solid #c5a880 !important;
-  border-bottom-width: 3.5px !important;
-  box-shadow: 0 10px 25px -5px rgba(197, 168, 128, 0.15) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%) !important;
+  border: 3px solid #d4af37 !important;
+  border-bottom-width: 6px !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 0 8px 20px -4px rgba(212, 175, 55, 0.25) !important;
 }
 
 .theme-neutral #gift-countdown-timer-clocks span,
 .theme-neutral .grid-cols-4 span {
-  color: #1c1917 !important;
-  -webkit-text-fill-color: #1c1917 !important;
+  color: #1a1a1a !important;
+  -webkit-text-fill-color: #1a1a1a !important;
   text-shadow: none !important;
   background-clip: initial !important;
+  font-family: "Fredoka", sans-serif !important;
 }
 
-/* Premium Gold Labels inside countdown grids */
 .theme-neutral #gift-countdown-timer-clocks .text-\[9px\],
 .theme-neutral .grid-cols-4 .text-\[9px\] {
-  color: #b89753 !important;
+  color: #c59b27 !important;
   font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
 }
 
-/* Premium Highlights & Cards with Gold touch */
+/* Spoiler / Destaque elements in Gold accent */
 .theme-neutral #spoiler-revealed-state,
-.theme-neutral .border-yellow-400 {
-  border-color: #c5a880 !important;
-  box-shadow: 0 15px 40px -10px rgba(197, 168, 128, 0.18) !important;
+.theme-neutral .border-yellow-400,
+.theme-neutral .border-amber-400 {
+  border: 4px solid #d4af37 !important;
   background-color: #ffffff !important;
+  box-shadow: 0 12px 36px -8px rgba(212, 175, 55, 0.2) !important;
 }
 
-/* Soft white background blur elements and cards */
+/* Neutralized dark overlays to pristine white panels */
 .theme-neutral .bg-black\/60,
 .theme-neutral .bg-black\/75,
 .theme-neutral .bg-black\/40,
@@ -181,36 +172,40 @@
 .theme-neutral .bg-indigo-950,
 .theme-neutral .bg-zinc-950\/95,
 .theme-neutral .bg-black\/30 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(197, 168, 128, 0.16) !important;
-  box-shadow: 0 10px 30px -10px rgba(197, 168, 128, 0.08) !important;
+  border: 2.5px solid rgba(109, 40, 217, 0.08) !important;
+  box-shadow: 0 10px 30px -10px rgba(109, 40, 217, 0.06) !important;
 }
 
-/* Micro Header Banner */
+/* Micro Header Banner - Royal purple */
 .theme-neutral .bg-gradient-to-r.from-purple-800.via-pink-600.to-purple-900 {
-  background: linear-gradient(to right, #4c1d95, #6d28d9, #4c1d95) !important;
+  background: linear-gradient(to right, #5b21b6, #7c3aed, #5b21b6) !important;
 }
 
 .theme-neutral .bg-gradient-to-r.from-purple-800.via-pink-600.to-purple-900 * {
   color: #ffffff !important;
 }
 
-/* Interactive Buttons styled in Premium Violet Roxo */
-.theme-neutral button:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(#gift-countdown-timer-clocks *):not(.grid-cols-4 *),
+/* Playful Royal Purple buttons */
+.theme-neutral button:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(.bg-amber-500):not(#gift-countdown-timer-clocks *):not(.grid-cols-4 *),
 .theme-neutral .bg-gradient-to-r.from-pink-500 {
-  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(109, 40, 217, 0.2) !important;
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.15) !important;
-}
-
-.theme-neutral button:hover:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(#gift-countdown-timer-clocks *):not(.grid-cols-4 *) {
   background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
-  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.25) !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(109, 40, 217, 0.15) !important;
+  border-bottom-width: 4px !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.12) !important;
+  font-family: "Fredoka", sans-serif !important;
 }
 
-.theme-neutral button:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800) * {
+.theme-neutral button:hover:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(.bg-amber-500):not(#gift-countdown-timer-clocks *):not(.grid-cols-4 *) {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.22) !important;
+}
+
+.theme-neutral button:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(.bg-amber-500) * {
   color: #ffffff !important;
 }
 

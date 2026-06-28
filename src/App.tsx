@@ -316,7 +316,7 @@ export default function App() {
       if (isApplicationsRoute) {
         document.title = "PKXD Hub - Inscrições";
       } else {
-        document.title = "Central PK XD - Spoilers e Novidades";
+        document.title = "PKXD Hub";
       }
     } catch (e) {
       console.warn(e);
