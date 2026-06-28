@@ -33,7 +33,8 @@ import {
   Menu,
   ChevronRight,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Palette
 } from 'lucide-react';
 import { playTapSound, playLevelUpSound, playSuccessSound } from './utils/audio';
 
@@ -125,6 +126,24 @@ export default function App() {
 
   const [pastSpoilerToEdit, setPastSpoilerToEdit] = useState<PastSpoiler | null>(null);
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
+
+  const [siteTheme, setSiteTheme] = useState<'default' | 'neutral'>(() => {
+    try {
+      return (localStorage.getItem('pkxd_site_theme') as 'default' | 'neutral') || 'default';
+    } catch (e) {
+      return 'default';
+    }
+  });
+
+  const toggleTheme = () => {
+    const newTheme = siteTheme === 'default' ? 'neutral' : 'default';
+    setSiteTheme(newTheme);
+    try {
+      localStorage.setItem('pkxd_site_theme', newTheme);
+    } catch (e) {
+      console.warn(e);
+    }
+  };
 
   // State hooks for new components
   const [featuredList, setFeaturedList] = useState<FeaturedVideo[]>([]);
@@ -1636,12 +1655,12 @@ export default function App() {
   };
 
   return (
-    <div id="pkxd-app-root" className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-yellow-400 selection:text-black pb-16 relative overflow-x-hidden bg-pkxd-texture">
+    <div id="pkxd-app-root" className={`min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-yellow-400 selection:text-black pb-16 relative overflow-x-hidden bg-pkxd-texture ${siteTheme === 'neutral' ? 'theme-neutral' : ''}`}>
       
       {/* Premium ambient space backdrop glows */}
-      <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, rgba(124, 18, 235, 0.12) 0%, rgba(124, 18, 235, 0) 70%)' }} />
-      <div className="absolute bottom-1/3 left-[5%] w-[450px] h-[450px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, rgba(255, 0, 122, 0.1) 0%, rgba(255, 0, 122, 0) 70%)' }} />
-      <div className="absolute top-[80%] right-[5%] w-[400px] h-[400px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, rgba(0, 240, 255, 0) 70%)' }} />
+      <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, var(--glow-1) 0%, transparent 70%)' }} />
+      <div className="absolute bottom-1/3 left-[5%] w-[450px] h-[450px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, var(--glow-2) 0%, transparent 70%)' }} />
+      <div className="absolute top-[80%] right-[5%] w-[400px] h-[400px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, var(--glow-3) 0%, transparent 70%)' }} />
 
       {/* Upper Micro banner for System Alerts/Gamer Levels */}
       <div className="bg-gradient-to-r from-purple-800 via-pink-600 to-purple-900 py-2.5 px-4 text-center text-white text-xs font-bold leading-tight flex flex-wrap items-center justify-center gap-3 shadow-md relative z-30 select-none border-b-2 border-white/10">
@@ -1731,6 +1750,26 @@ export default function App() {
 
           {/* Action Links */}
           <div className="flex items-center gap-2">
+
+            {/* Theme Toggle Button */}
+            <button 
+              type="button"
+              onClick={() => {
+                triggerAudio('tap');
+                toggleTheme();
+              }}
+              className={`border-2 p-2.5 px-3 rounded-2xl transition-all cursor-pointer flex items-center gap-1.5 text-[11px] font-extrabold shadow-md ${
+                siteTheme === 'neutral'
+                  ? 'bg-zinc-800 text-yellow-400 border-yellow-500/50 hover:bg-zinc-700'
+                  : 'bg-purple-800 text-purple-200 border-purple-500/50 hover:bg-purple-900'
+              }`}
+              title={siteTheme === 'neutral' ? "Alternar para Tema PKXD (Colorido)" : "Alternar para Tema Neutro (Branco/Preto/Dourado/Prata/Roxo)"}
+            >
+              <Palette className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">
+                {siteTheme === 'neutral' ? 'PREMIUM NEUTRO' : 'TEMA PKXD'}
+              </span>
+            </button>
 
             {/* Notification center bell with badge! */}
             <button 

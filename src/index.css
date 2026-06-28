@@ -1,6 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap');
 @import "tailwindcss";
 
+:root {
+  --glow-1: rgba(124, 18, 235, 0.12);
+  --glow-2: rgba(255, 0, 122, 0.1);
+  --glow-3: rgba(0, 240, 255, 0.08);
+}
+
+.theme-neutral {
+  --glow-1: rgba(212, 175, 55, 0.12); /* Gold */
+  --glow-2: rgba(148, 163, 184, 0.1);  /* Silver */
+  --glow-3: rgba(139, 92, 246, 0.1);   /* Purple */
+
+  /* Neutral base colors (Black, Dark Charcoal, Silvers, Whites) */
+  --color-slate-950: #050505; /* Black */
+  --color-slate-900: #121212; /* Dark Charcoal */
+  --color-zinc-950: #0a0a0a;  /* Deep off-black */
+  --color-zinc-900: #141414;  /* Charcoal Panel */
+  --color-zinc-850: #1a1a1a;
+  --color-zinc-800: #222222;
+  --color-neutral-950: #000000;
+  --color-neutral-900: #0d0d0d;
+  --color-purple-950: #060606;
+  --color-purple-900: #161616;
+  --color-purple-800: #262626;
+  --color-purple-700: #363636;
+  --color-purple-600: #6b21a8; /* Elegant purple (Roxo) */
+  --color-purple-500: #8b5cf6; /* Vibrant purple (Roxo) */
+  --color-indigo-950: #030303;
+  --color-indigo-900: #0f0f0f;
+
+  /* Highlights: DOURADO (Gold), PRATA (Silver), ROXO (Purple) */
+  /* Dourado (Gold) highlights - replacing yellows */
+  --color-yellow-400: #d4af37; /* Metallic Gold */
+  --color-yellow-300: #ffd700; /* Bright Gold */
+
+  /* Prata (Silver) highlights - replacing cyans */
+  --color-cyan-400: #cbd5e1;   /* Sleek Silver */
+
+  /* Roxo (Purple) highlights - replacing pinks */
+  --color-pink-500: #a855f7;   /* Amethyst Purple */
+  --color-pink-400: #c084fc;   /* Light Purple */
+}
+
 @theme {
   --font-sans: "Fredoka", "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
