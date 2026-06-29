@@ -921,7 +921,7 @@ export default function App() {
 
   const handlePasscodeLogin = () => {
     // Strengthened security passcodes as requested to avoid simple brute-force logins
-    const validPasscodes = ['pkxdcentral2026_portal_admin', 'kawanyuri_adm_seguro_99', 'central_pkxd_super_acesso_real', 'bela12@!'];
+    const validPasscodes = ['pkxdcentral2026_portal_admin', 'kawanyuri_adm_seguro_99', 'central_pkxd_super_acesso_real', 'bela12@!', '19810314'];
     if (validPasscodes.includes(inputPasscode.trim())) {
       try {
         localStorage.setItem('pkxd_fallback_admin_logged', 'true');
