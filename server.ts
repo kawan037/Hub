@@ -3,6 +3,8 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import webpush from "web-push";
+import { adminDb } from "./src/lib/firebase-admin.ts";
 
 dotenv.config();
 
@@ -10,6 +12,99 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// Configure VAPID details for Web Push
+const vapidKeys = {
+  publicKey: "BPmNLwhO3NAUPTV8dvmbTQlKgZdIERcVxQjjv7LYMHDH-kGlM1bHnqdV9IFxdBN4d5006fw7eyNXPDzw2Y6Xlzo",
+  privateKey: "k1PdAotohasg-Qtk5XSGoUgEZmhL63Ia_yN8UtLoxd0"
+};
+
+webpush.setVapidDetails(
+  "mailto:kawanyuri35@gmail.com",
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
+
+// Track server start time to filter historical notifications
+const serverStartTime = Date.now() - 5000;
+
+// Helper to broadcast Web Push to all subscribers
+async function sendPushNotificationToAll(title: string, body: string, url: string = "/") {
+  console.log(`[Web Push] Disparando notificação nativa para todos: "${title}" - "${body}"`);
+  try {
+    const subsSnap = await adminDb.collection("push_subscriptions").get();
+    if (subsSnap.empty) {
+      console.log("[Web Push] Nenhuma inscrição encontrada no banco.");
+      return;
+    }
+
+    const payload = JSON.stringify({
+      title,
+      body,
+      url
+    });
+
+    const sendPromises = subsSnap.docs.map(async (doc) => {
+      const subData = doc.data();
+      try {
+        await webpush.sendNotification(subData.subscription, payload);
+      } catch (err: any) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          console.log(`[Web Push] Removendo inscrição inativa: ${doc.id}`);
+          await doc.ref.delete();
+        } else {
+          console.error(`[Web Push] Erro ao enviar para ${doc.id}:`, err);
+        }
+      }
+    });
+
+    await Promise.allSettled(sendPromises);
+    console.log("[Web Push] Disparo em lote finalizado.");
+  } catch (err) {
+    console.error("[Web Push] Erro geral ao disparar notificações:", err);
+  }
+}
+
+// Start real-time Firestore listener for new notifications to push them
+try {
+  adminDb.collection("notifications").onSnapshot((snapshot) => {
+    snapshot.docChanges().forEach(async (change) => {
+      if (change.type === "added") {
+        const data = change.doc.data();
+        if (data && data.createdAt && data.createdAt > serverStartTime) {
+          await sendPushNotificationToAll(data.title, data.body, "/");
+        }
+      }
+    });
+  });
+  console.log("[Web Push] Ouvinte em tempo real da coleção 'notifications' ativado.");
+} catch (snapshotErr) {
+  console.error("Erro ao configurar Firestore Snapshot Listener para Web Push:", snapshotErr);
+}
+
+// Subscribe route for clients
+app.post("/api/push-subscribe", async (req, res) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint) {
+    res.status(400).json({ error: "Inscrição inválida" });
+    return;
+  }
+
+  try {
+    const subscriptionId = Buffer.from(subscription.endpoint).toString('base64').replace(/=/g, '').substring(0, 50);
+    const subRef = adminDb.collection("push_subscriptions").doc(subscriptionId);
+    
+    await subRef.set({
+      subscription,
+      createdAt: Date.now()
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("Erro ao salvar inscrição Push:", err);
+    res.status(500).json({ error: err.message || "Erro interno do servidor" });
+  }
+});
 
 // Lazy-initialize Gemini SDK to be resilient if key is missing on startup
 let aiClient: GoogleGenAI | null = null;

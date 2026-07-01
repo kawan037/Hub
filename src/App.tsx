@@ -360,6 +360,57 @@ export default function App() {
     return false;
   });
 
+  // Helper utility to convert base64 VAPID public key to Uint8Array
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  // Reusable function to subscribe the client to Web Push notifications
+  const subscribeUserToPush = async () => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.warn('Web Push is not fully supported in this browser.');
+      return;
+    }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const publicVapidKey = 'BPmNLwhO3NAUPTV8dvmbTQlKgZdIERcVxQjjv7LYMHDH-kGlM1bHnqdV9IFxdBN4d5006fw7eyNXPDzw2Y6Xlzo';
+      
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+      });
+
+      console.log('PKXD Hub subscription generated:', subscription);
+
+      // Send subscription object to the server
+      await fetch('/api/push-subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+    } catch (err) {
+      console.error('Falha ao registrar push no servidor:', err);
+    }
+  };
+
+  // Automatically attempt push subscription sync if permission is granted
+  useEffect(() => {
+    if (hasNotificationPermission) {
+      subscribeUserToPush();
+    }
+  }, [hasNotificationPermission]);
+
   // Fullscreen spoiler overlay state
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [fullscreenData, setFullscreenData] = useState<{title: string, desc: string, imageUrl?: string} | null>(null);
@@ -2723,36 +2774,6 @@ export default function App() {
               )}
             </div>
 
-            {/* PWA App Installation Card */}
-            <div className="mb-6 p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <h4 className="font-sans font-black text-xs uppercase tracking-wider text-yellow-400">📲 Baixar Aplicativo Oficial do PKXD Hub</h4>
-                <p className="text-[11px] text-gray-400 leading-normal">
-                  Instale o site direto no seu celular para abrir em tela cheia igual a um jogo de verdade, sem carregar abas do navegador! É super leve e rápido.
-                </p>
-              </div>
-              
-              {isAppInstalled ? (
-                <div className="flex-shrink-0 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide flex items-center gap-1.5 self-stretch sm:self-auto justify-center">
-                  Aplicativo Instalado! 🎉
-                </div>
-              ) : deferredPrompt ? (
-                <button
-                  onClick={() => {
-                    triggerAudio('tap');
-                    handleInstallApp();
-                  }}
-                  className="flex-shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-sans font-black uppercase text-[10px] tracking-wider rounded-xl cursor-pointer shadow-lg active:scale-95 transition-all text-center w-full sm:w-auto"
-                >
-                  📥 INSTALAR APP NO CELULAR
-                </button>
-              ) : (
-                <div className="text-[10px] text-yellow-400/80 font-bold uppercase border border-yellow-400/25 bg-yellow-400/5 px-3 py-1.5 rounded-xl text-center self-stretch sm:self-auto leading-normal">
-                  Pelo Chrome: Clique em (⋮) &gt; "Instalar"
-                </div>
-              )}
-            </div>
-
             {/* Google Native Notifications explanation panel */}
             <div className="mb-6 p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/25 space-y-3 text-left">
               <h5 className="font-sans font-black text-xs uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
@@ -2769,16 +2790,13 @@ export default function App() {
                 </p>
                 <ul className="list-disc pl-4 text-[11px] text-gray-300 space-y-1.5 font-sans leading-relaxed">
                   <li>
-                    <strong className="text-white">Instale o PKXD Hub como App:</strong> Clique no botão <strong className="text-amber-300">"Instalar App no Celular"</strong> acima. Quando instalado, o celular registra o Service Worker que monitora notificações em segundo plano!
+                    <strong className="text-white">Ative as Permissões no Aparelho:</strong> Clique no botão <strong className="text-pink-400">"ATIVAR ALERTAS"</strong> acima e selecione "Permitir" quando o navegador solicitar. Isso criará uma inscrição de Web Push segura no servidor!
                   </li>
                   <li>
-                    <strong className="text-white">Ative as Permissões no Aparelho:</strong> Clique em <strong className="text-pink-400">"ATIVAR ALERTAS"</strong> acima e selecione "Permitir" quando o navegador/celular solicitar.
+                    <strong className="text-white">Receba Mesmo Fechado:</strong> Com a permissão concedida, o celular receberá os alertas na tela de bloqueio e na barra de notificações nativa do Android/Google Chrome, mesmo com o navegador fechado!
                   </li>
                   <li>
-                    <strong className="text-white">Não Force o Fechamento Completo:</strong> Evite limpar o aplicativo da lista de tarefas recentes ("limpar memória") para que o serviço do Android/Google possa entregar o alerta instantaneamente.
-                  </li>
-                  <li>
-                    <strong className="text-white">Dica para iOS (iPhones):</strong> Toque no ícone de compartilhar <strong className="text-cyan-300">📤</strong>, selecione <strong className="text-cyan-300">"Adicionar à Tela de Início"</strong>, abra o app por lá e ative os alertas!
+                    <strong className="text-white">Dica para iOS (iPhones):</strong> Toque no ícone de compartilhar <strong className="text-cyan-300">📤</strong>, selecione <strong className="text-cyan-300">"Adicionar à Tela de Início"</strong>, abra o site por lá e clique no botão de alertas para ativar!
                   </li>
                 </ul>
               </div>
