@@ -61,8 +61,8 @@ var app = (0, import_express.default)();
 var PORT = 3e3;
 app.use(import_express.default.json());
 var vapidKeys = {
-  publicKey: "BPmNLwhO3NAUPTV8dvmbTQlKgZdIERcVxQjjv7LYMHDH-kGlM1bHnqdV9IFxdBN4d5006fw7eyNXPDzw2Y6Xlzo",
-  privateKey: "k1PdAotohasg-Qtk5XSGoUgEZmhL63Ia_yN8UtLoxd0"
+  publicKey: process.env.VAPID_PUBLIC_KEY || "BPmNLwhO3NAUPTV8dvmbTQlKgZdIERcVxQjjv7LYMHDH-kGlM1bHnqdV9IFxdBN4d5006fw7eyNXPDzw2Y6Xlzo",
+  privateKey: process.env.VAPID_PRIVATE_KEY || "k1PdAotohasg-Qtk5XSGoUgEZmhL63Ia_yN8UtLoxd0"
 };
 import_web_push.default.setVapidDetails(
   "mailto:kawanyuri35@gmail.com",
@@ -117,6 +117,9 @@ try {
 } catch (snapshotErr) {
   console.error("Erro ao configurar Firestore Snapshot Listener para Web Push:", snapshotErr);
 }
+app.get("/api/vapid-public-key", (req, res) => {
+  res.json({ publicKey: vapidKeys.publicKey });
+});
 app.post("/api/push-subscribe", async (req, res) => {
   const subscription = req.body;
   if (!subscription || !subscription.endpoint) {
@@ -131,6 +134,17 @@ app.post("/api/push-subscribe", async (req, res) => {
       subscription,
       createdAt: Date.now()
     });
+    const testPayload = JSON.stringify({
+      title: "PKXD Hub \u{1F514}",
+      body: "Inscri\xE7\xE3o de alertas ativada com sucesso! Voc\xEA receber\xE1 not\xEDcias em tempo real aqui.",
+      url: "/"
+    });
+    try {
+      await import_web_push.default.sendNotification(subscription, testPayload);
+      console.log(`[Web Push] Welcome test notification sent successfully to ${subscriptionId}`);
+    } catch (pushErr) {
+      console.error(`[Web Push] Failed to send welcome test notification to ${subscriptionId}:`, pushErr);
+    }
     res.json({ success: true, id: subscriptionId });
   } catch (err) {
     console.error("Erro ao salvar inscri\xE7\xE3o Push:", err);
