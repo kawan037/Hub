@@ -107,20 +107,6 @@ app.post("/api/push-subscribe", async (req, res) => {
       createdAt: Date.now()
     });
 
-    // Send a welcome test push immediately to confirm registration worked!
-    const testPayload = JSON.stringify({
-      title: "PKXD Hub 🔔",
-      body: "Inscrição de alertas ativada com sucesso! Você receberá notícias em tempo real aqui.",
-      url: "/"
-    });
-
-    try {
-      await webpush.sendNotification(subscription, testPayload);
-      console.log(`[Web Push] Welcome test notification sent successfully to ${subscriptionId}`);
-    } catch (pushErr) {
-      console.error(`[Web Push] Failed to send welcome test notification to ${subscriptionId}:`, pushErr);
-    }
-
     res.json({ success: true, id: subscriptionId });
   } catch (err: any) {
     console.error("Erro ao salvar inscrição Push:", err);
