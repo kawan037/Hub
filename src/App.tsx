@@ -36,6 +36,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { playTapSound, playLevelUpSound, playSuccessSound } from './utils/audio';
+import { motion, AnimatePresence } from 'motion/react';
 
 // Import Firebase config & helpers
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
@@ -2574,207 +2575,227 @@ export default function App() {
       </div>
 
       {/* COLLAPSIBLE SIDEBAR DRAWER SECTIONS NAVIGATOR */}
-      {isNavMenuOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden" id="navigation-sidebar-drawer">
-          {/* Translucent Backdrop */}
-          <div 
-            className="absolute inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity duration-350" 
-            onClick={() => {
-              setIsNavMenuOpen(false);
-              triggerAudio('tap');
-            }}
-          />
+      <AnimatePresence>
+        {isNavMenuOpen && (
+          <div className="fixed inset-0 z-50 overflow-hidden" id="navigation-sidebar-drawer">
+            {/* Translucent Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity" 
+              onClick={() => {
+                setIsNavMenuOpen(false);
+                triggerAudio('tap');
+              }}
+            />
 
-          <div className="absolute inset-y-0 right-0 max-w-full flex pl-4">
-            <div className="w-screen max-w-xs sm:max-w-md animate-slide-in">
-              <div className="h-full flex flex-col bg-gradient-to-b from-[#0a051b] via-[#0d0726] to-[#04020a] border-l-2 border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-y-auto">
-                
-                {/* Drawer Header */}
-                <div className="p-6 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-slate-950 to-indigo-950/60 relative">
-                  {/* Glowing background header effect */}
-                  <div className="absolute top-0 right-1/4 w-32 h-12 bg-cyan-500/10 blur-xl rounded-full pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 max-w-full flex pl-4">
+              <motion.div 
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+                className="w-screen max-w-xs sm:max-w-md h-full"
+              >
+                <div className="h-full flex flex-col bg-gradient-to-b from-[#0a051b] via-[#0d0726] to-[#04020a] border-l-2 border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.15)] relative overflow-y-auto">
                   
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-400/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-                      <Compass className="w-5 h-5 text-cyan-400 animate-spin-slow" />
+                  {/* Drawer Header */}
+                  <div className="p-6 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-slate-950 to-indigo-950/60 relative">
+                    {/* Glowing background header effect */}
+                    <div className="absolute top-0 right-1/4 w-32 h-12 bg-cyan-500/10 blur-xl rounded-full pointer-events-none" />
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-400/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                        <Compass className="w-5 h-5 text-cyan-400 animate-spin-slow" />
+                      </div>
+                      <div>
+                        <h3 className="font-sans font-black text-sm uppercase tracking-widest text-white flex items-center gap-1.5">
+                          <span className="bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300 bg-clip-text text-transparent">
+                            Portal PKXD
+                          </span>
+                          <span className="text-[10px] bg-yellow-400 text-black px-1.5 py-0.5 rounded-md font-black tracking-normal uppercase">
+                            Hub
+                          </span>
+                        </h3>
+                        <p className="text-[9px] text-cyan-400 font-mono tracking-wider">GUIA DE ATALHOS RÁPIDOS</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-sans font-black text-sm uppercase tracking-widest text-white flex items-center gap-1.5">
-                        <span className="bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300 bg-clip-text text-transparent">
-                          Portal PKXD
-                        </span>
-                        <span className="text-[10px] bg-yellow-400 text-black px-1.5 py-0.5 rounded-md font-black tracking-normal uppercase">
-                          Hub
-                        </span>
-                      </h3>
-                      <p className="text-[9px] text-cyan-400 font-mono tracking-wider">GUIA DE ATALHOS RÁPIDOS</p>
-                    </div>
+                    
+                    <motion.button 
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        setIsNavMenuOpen(false);
+                        triggerAudio('tap');
+                      }}
+                      className="w-9 h-9 rounded-full bg-white/[0.04] hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30 border border-white/10 text-gray-400 transition-all duration-150 cursor-pointer flex items-center justify-center font-bold text-base"
+                      title="Fechar Menu"
+                    >
+                      ✕
+                    </motion.button>
                   </div>
-                  
-                  <button 
-                    onClick={() => {
-                      setIsNavMenuOpen(false);
-                      triggerAudio('tap');
-                    }}
-                    className="w-9 h-9 rounded-full bg-white/[0.04] hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30 border border-white/10 text-gray-400 transition-all duration-150 cursor-pointer flex items-center justify-center font-bold text-base"
-                    title="Fechar Menu"
-                  >
-                    ✕
-                  </button>
-                </div>
 
-                {/* Navigation Links list */}
-                <div className="flex-1 p-5 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar">
-                  <div className="flex items-center justify-between">
-                    <p className="font-sans text-[10px] text-gray-400 uppercase tracking-widest font-black flex items-center gap-1">
-                      <span>🎯</span> SEÇÕES DISPONÍVEIS:
-                    </p>
-                    <span className="text-[9px] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full text-gray-400 font-mono">
-                      7 Áreas
-                    </span>
-                  </div>
-                  
-                  <nav className="space-y-3">
-                    {[
-                      { 
-                        id: 'countdown-card-root', 
-                        title: 'Spoilers Semanais', 
-                        desc: 'Contagem regressiva e spoilers oficiais em vigor', 
-                        badge: '⏱️ Ativo', 
-                        badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                        glowColor: 'group-hover:border-emerald-500/40 group-hover:bg-emerald-500/[0.02]',
-                        sideColor: 'bg-emerald-500'
-                      },
-                      { 
-                        id: 'past-spoilers-history-section-wrapper', 
-                        title: 'Spoilers Antigos', 
-                        desc: 'Bandeja histórica de spoilers e histórias arquivadas', 
-                        badge: '🔮 Histórico', 
-                        badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-                        glowColor: 'group-hover:border-purple-500/40 group-hover:bg-purple-500/[0.02]',
-                        sideColor: 'bg-purple-500'
-                      },
-                      { 
-                        id: 'fan-level-section-wrapper', 
-                        title: 'Nível de Fã Extra', 
-                        desc: 'Subir de nível e coletar insígnias oficiais de fã', 
-                        badge: '🏆 Desafios', 
-                        badgeColor: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
-                        glowColor: 'group-hover:border-pink-500/40 group-hover:bg-pink-500/[0.02]',
-                        sideColor: 'bg-pink-500'
-                      },
-                      { 
-                        id: 'promo-code-redeemer-section-wrapper', 
-                        title: 'Resgatar Códigos', 
-                        desc: 'Promo codes ativos nos últimos 7 dias', 
-                        badge: '🎟️ Ativos', 
-                        badgeColor: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-                        glowColor: 'group-hover:border-yellow-500/40 group-hover:bg-yellow-500/[0.02]',
-                        sideColor: 'bg-yellow-400'
-                      },
-                      { 
-                        id: 'featured-videos-section-wrapper', 
-                        title: 'Vídeos Destaques', 
-                        desc: 'Tutoriais de moedas e gameplays recomendadas', 
-                        badge: '🎥 Vídeos', 
-                        badgeColor: 'bg-red-500/10 text-red-400 border-red-500/20',
-                        glowColor: 'group-hover:border-red-500/40 group-hover:bg-red-500/[0.02]',
-                        sideColor: 'bg-red-500'
-                      },
-                      { 
-                        id: 'best-shorts-section-wrapper', 
-                        title: 'Shorts Virais', 
-                        desc: 'Vídeos curtos e engraçados da comunidade', 
-                        badge: '📱 Shorts', 
-                        badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-                        glowColor: 'group-hover:border-cyan-500/40 group-hover:bg-cyan-500/[0.02]',
-                        sideColor: 'bg-cyan-400'
-                      },
-                      { 
-                        id: 'theories-section-wrapper', 
-                        title: 'Teorias dos Fãs', 
-                        desc: 'Segredos ocultos e suposições da atualização', 
-                        badge: '📜 Fórum', 
-                        badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-                        glowColor: 'group-hover:border-amber-500/40 group-hover:bg-amber-500/[0.02]',
-                        sideColor: 'bg-amber-500'
-                      },
-                    ].map((section) => (
-                      <button
-                        key={section.id}
-                        type="button"
-                        onClick={() => {
-                          setIsNavMenuOpen(false);
-                          triggerAudio('tap');
-                          // Smooth scroll targeting center
-                          setTimeout(() => {
-                            document.getElementById(section.id)?.scrollIntoView({
-                              behavior: 'smooth',
-                              block: 'center',
-                            });
-                          }, 120);
-                        }}
-                        className={`w-full text-left p-3.5 rounded-2xl border border-white/5 bg-white/[0.02] ${section.glowColor} transition-all duration-200 flex items-center justify-between group cursor-pointer hover:translate-x-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.5)] relative overflow-hidden`}
-                      >
-                        {/* Elegant side tag border indicator */}
-                        <div className={`absolute left-0 inset-y-0 w-[4px] ${section.sideColor} opacity-0 group-hover:opacity-100 transition-opacity duration-200`} />
-                        
-                        <div className="space-y-1 pl-1.5 pr-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-sans font-black text-xs sm:text-sm text-gray-100 group-hover:text-cyan-300 transition-colors">
-                              {section.title}
-                            </span>
-                            <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${section.badgeColor}`}>
-                              {section.badge}
+                  {/* Navigation Links list */}
+                  <div className="flex-1 p-5 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar">
+                    <div className="flex items-center justify-between">
+                      <p className="font-sans text-[10px] text-gray-400 uppercase tracking-widest font-black flex items-center gap-1">
+                        <span>🎯</span> SEÇÕES DISPONÍVEIS:
+                      </p>
+                      <span className="text-[9px] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full text-gray-400 font-mono">
+                        7 Áreas
+                      </span>
+                    </div>
+                    
+                    <nav className="space-y-3">
+                      {[
+                        { 
+                          id: 'countdown-card-root', 
+                          title: 'Spoilers Semanais', 
+                          desc: 'Contagem regressiva e spoilers oficiais em vigor', 
+                          badge: '⏱️ Ativo', 
+                          badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                          glowColor: 'group-hover:border-emerald-500/40 group-hover:bg-emerald-500/[0.02]',
+                          sideColor: 'bg-emerald-500'
+                        },
+                        { 
+                          id: 'past-spoilers-history-section-wrapper', 
+                          title: 'Spoilers Antigos', 
+                          desc: 'Bandeja histórica de spoilers e histórias arquivadas', 
+                          badge: '🔮 Histórico', 
+                          badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+                          glowColor: 'group-hover:border-purple-500/40 group-hover:bg-purple-500/[0.02]',
+                          sideColor: 'bg-purple-500'
+                        },
+                        { 
+                          id: 'fan-level-section-wrapper', 
+                          title: 'Nível de Fã Extra', 
+                          desc: 'Subir de nível e coletar insígnias oficiais de fã', 
+                          badge: '🏆 Desafios', 
+                          badgeColor: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+                          glowColor: 'group-hover:border-pink-500/40 group-hover:bg-pink-500/[0.02]',
+                          sideColor: 'bg-pink-500'
+                        },
+                        { 
+                          id: 'promo-code-redeemer-section-wrapper', 
+                          title: 'Resgatar Códigos', 
+                          desc: 'Promo codes ativos nos últimos 7 dias', 
+                          badge: '🎟️ Ativos', 
+                          badgeColor: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+                          glowColor: 'group-hover:border-yellow-500/40 group-hover:bg-yellow-500/[0.02]',
+                          sideColor: 'bg-yellow-400'
+                        },
+                        { 
+                          id: 'featured-videos-section-wrapper', 
+                          title: 'Vídeos Destaques', 
+                          desc: 'Tutoriais de moedas e gameplays recomendadas', 
+                          badge: '🎥 Vídeos', 
+                          badgeColor: 'bg-red-500/10 text-red-400 border-red-500/20',
+                          glowColor: 'group-hover:border-red-500/40 group-hover:bg-red-500/[0.02]',
+                          sideColor: 'bg-red-500'
+                        },
+                        { 
+                          id: 'best-shorts-section-wrapper', 
+                          title: 'Shorts Virais', 
+                          desc: 'Vídeos curtos e engraçados da comunidade', 
+                          badge: '📱 Shorts', 
+                          badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+                          glowColor: 'group-hover:border-cyan-500/40 group-hover:bg-cyan-500/[0.02]',
+                          sideColor: 'bg-cyan-400'
+                        },
+                        { 
+                          id: 'theories-section-wrapper', 
+                          title: 'Teorias dos Fãs', 
+                          desc: 'Segredos ocultos e suposições da atualização', 
+                          badge: '📜 Fórum', 
+                          badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                          glowColor: 'group-hover:border-amber-500/40 group-hover:bg-amber-500/[0.02]',
+                          sideColor: 'bg-amber-500'
+                        },
+                      ].map((section) => (
+                        <motion.button
+                          key={section.id}
+                          type="button"
+                          whileHover={{ scale: 1.02, x: 6 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setIsNavMenuOpen(false);
+                            triggerAudio('tap');
+                            // Smooth scroll targeting center
+                            setTimeout(() => {
+                              document.getElementById(section.id)?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center',
+                              });
+                            }, 120);
+                          }}
+                          className={`w-full text-left p-3.5 rounded-2xl border border-white/5 bg-white/[0.02] ${section.glowColor} transition-all duration-200 flex items-center justify-between group cursor-pointer hover:shadow-[0_4px_12px_rgba(0,0,0,0.5)] relative overflow-hidden`}
+                        >
+                          {/* Elegant side tag border indicator */}
+                          <div className={`absolute left-0 inset-y-0 w-[4px] ${section.sideColor} opacity-0 group-hover:opacity-100 transition-opacity duration-200`} />
+                          
+                          <div className="space-y-1 pl-1.5 pr-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-sans font-black text-xs sm:text-sm text-gray-100 group-hover:text-cyan-300 transition-colors">
+                                {section.title}
+                              </span>
+                              <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${section.badgeColor}`}>
+                                {section.badge}
+                              </span>
+                            </div>
+                            <span className="block font-sans text-[10.5px] text-gray-400 leading-snug group-hover:text-gray-300 transition-colors">
+                              {section.desc}
                             </span>
                           </div>
-                          <span className="block font-sans text-[10.5px] text-gray-400 leading-snug group-hover:text-gray-300 transition-colors">
-                            {section.desc}
-                          </span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-cyan-400 transition-all transform group-hover:translate-x-1.5 flex-shrink-0" />
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-
-                {/* Quick Info footer inside drawer */}
-                <div className="p-5 sm:p-6 border-t border-white/10 bg-slate-950/80 backdrop-blur-md space-y-3 relative">
-                  <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
-                  
-                  <div className="flex items-center justify-center gap-1.5 text-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                    <span className="text-[9px] font-black text-gray-400 tracking-widest uppercase">ADMINISTRAÇÃO & COMUNICADOS</span>
+                          <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-cyan-400 transition-all transform group-hover:translate-x-1.5 flex-shrink-0" />
+                        </motion.button>
+                      ))}
+                    </nav>
                   </div>
-                  
-                  {/* Candidate to Admin Form button */}
-                  <button 
-                    onClick={() => { triggerAudio('tap'); navigateTo('/inscricoes#admin'); }}
-                    className="w-full py-3 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:via-indigo-500 hover:to-cyan-500 text-white font-sans font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_25px_rgba(168,85,247,0.4)] border border-indigo-500/30 cursor-pointer active:scale-98"
-                  >
-                    <span>🔐 CANDIDATAR A ADMIN 🌟</span>
-                  </button>
 
-                  <a 
-                    href={WHATSAPP_CHANNEL_URL} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 hover:scale-[1.01] active:scale-98 text-black font-sans font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5 fill-black" />
-                    <span>ENTRAR NO CANAL WHATSAPP</span>
-                  </a>
+                  {/* Quick Info footer inside drawer */}
+                  <div className="p-5 sm:p-6 border-t border-white/10 bg-slate-950/80 backdrop-blur-md space-y-3 relative">
+                    <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+                    
+                    <div className="flex items-center justify-center gap-1.5 text-center">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      <span className="text-[9px] font-black text-gray-400 tracking-widest uppercase">ADMINISTRAÇÃO & COMUNICADOS</span>
+                    </div>
+                    
+                    {/* Candidate to Admin Form button */}
+                    <motion.button 
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => { triggerAudio('tap'); navigateTo('/inscricoes#admin'); }}
+                      className="w-full py-3 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:via-indigo-500 hover:to-cyan-500 text-white font-sans font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:shadow-[0_0_25px_rgba(168,85,247,0.4)] border border-indigo-500/30 cursor-pointer"
+                    >
+                      <span>🔐 CANDIDATAR A ADMIN 🌟</span>
+                    </motion.button>
 
-                  <p className="text-[8.5px] text-gray-500 text-center pt-2 font-mono leading-normal">
-                    PKXD Hub © 2026 • Comunidade Oficial de Fãs
-                  </p>
+                    <motion.a 
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      href={WHATSAPP_CHANNEL_URL} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-black font-sans font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer text-center"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 fill-black" />
+                      <span>ENTRAR NO CANAL WHATSAPP</span>
+                    </motion.a>
+
+                    <p className="text-[8.5px] text-gray-500 text-center pt-2 font-mono leading-normal">
+                      PKXD Hub © 2026 • Comunidade Oficial de Fãs
+                    </p>
+                  </div>
+
                 </div>
-
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* FULLSCREEN SPOILER MODAL OVERLAY */}
       {isFullscreenOpen && fullscreenData && (
@@ -2939,6 +2960,17 @@ export default function App() {
                 <span className="animate-pulse">📢</span>
                 <span>Sobre as notificações não chegarem como notificação nativa do Google:</span>
               </h5>
+              
+              {/* IMPORTANT IFRAME PREVIEW NOTIFICATION ALERT */}
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl space-y-1.5 text-xs">
+                <p className="font-sans font-black uppercase flex items-center gap-1.5 tracking-wide text-yellow-400">
+                  <span>⚠️</span> ATENÇÃO: AMBIENTE DE VISUALIZAÇÃO DO MODELO
+                </p>
+                <p className="leading-relaxed font-sans text-[11px] text-gray-300">
+                  Como você está acessando pelo visualizador (iframe) do AI Studio, o navegador <strong>bloqueia</strong> o registro de Service Workers por segurança. Para poder registrar e receber notificações push nativas no seu celular ou PC, você <strong>DEVE abrir o site em uma nova aba</strong> (clique no botão <span className="text-amber-400 font-bold">"Open in a new tab" / "Abrir em nova guia"</span> no topo direito da tela).
+                </p>
+              </div>
+
               <p className="text-[11px] text-gray-300 leading-relaxed font-sans">
                 Atualmente, as notificações do site funcionam em tempo real por um canal de escuta do Firebase (Firestore). Elas atualizam o sininho instantaneamente e mostram alertas na tela do usuário enquanto ele está navegando no site.
               </p>
@@ -2949,13 +2981,13 @@ export default function App() {
                 </p>
                 <ul className="list-disc pl-4 text-[11px] text-gray-300 space-y-1.5 font-sans leading-relaxed">
                   <li>
-                    <strong className="text-white">Ative as Permissões no Aparelho:</strong> Clique no botão <strong className="text-pink-400">"ATIVAR ALERTAS"</strong> acima e selecione "Permitir" quando o navegador solicitar. Isso criará uma inscrição de Web Push segura no servidor!
+                    <strong className="text-white">Ative as Permissões no Aparelho:</strong> Abra o site em uma aba cheia, clique no botão <strong className="text-pink-400">"ATIVAR ALERTAS"</strong> acima e selecione "Permitir" quando o navegador solicitar. Isso criará uma inscrição de Web Push segura no servidor!
                   </li>
                   <li>
                     <strong className="text-white">Receba Mesmo Fechado:</strong> Com a permissão concedida, o celular receberá os alertas na tela de bloqueio e na barra de notificações nativa do Android/Google Chrome, mesmo com o navegador fechado!
                   </li>
                   <li>
-                    <strong className="text-white">Dica para iOS (iPhones):</strong> Toque no ícone de compartilhar <strong className="text-cyan-300">📤</strong>, selecione <strong className="text-cyan-300">"Adicionar à Tela de Início"</strong>, abra o site por lá e clique no botão de alertas para ativar!
+                    <strong className="text-white">Dica para iOS (iPhones):</strong> No Safari do iPhone, toque no ícone de compartilhar <strong className="text-cyan-300">📤</strong>, selecione <strong className="text-cyan-300">"Adicionar à Tela de Início"</strong>, abra o site por lá e clique no botão de alertas para ativar!
                   </li>
                 </ul>
               </div>
