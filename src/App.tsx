@@ -1791,7 +1791,7 @@ export default function App() {
   };
 
   return (
-    <div id="pkxd-app-root" className="theme-neutral min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-yellow-400 selection:text-black pb-16 relative overflow-x-hidden bg-pkxd-texture">
+    <div id="pkxd-app-root" className="theme-light min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-yellow-400 selection:text-black pb-16 relative overflow-x-hidden bg-pkxd-texture">
       
       {/* Premium ambient space backdrop glows */}
       <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] pointer-events-none select-none rounded-full" style={{ backgroundImage: 'radial-gradient(circle, var(--glow-1) 0%, transparent 70%)' }} />

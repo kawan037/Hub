@@ -125,5 +125,10 @@ service cloud.firestore {
       allow update: if true;
       allow delete: if isDeletable();
     }
+
+    // Custom avatars for purchase
+    match /custom_avatars/{avatarId} {
+      allow read, write: if true;
+    }
   }
 }

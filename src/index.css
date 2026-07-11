@@ -2,352 +2,297 @@
 @import "tailwindcss";
 
 :root {
-  --glow-1: rgba(124, 18, 235, 0.12);
-  --glow-2: rgba(255, 0, 122, 0.1);
-  --glow-3: rgba(0, 240, 255, 0.08);
+  --glow-1: rgba(124, 18, 235, 0.08);
+  --glow-2: rgba(255, 0, 122, 0.05);
+  --glow-3: rgba(0, 240, 255, 0.04);
 }
 
-.theme-neutral {
-  --glow-1: rgba(109, 40, 217, 0.05); /* Soft Purple Glow */
-  --glow-2: rgba(197, 168, 128, 0.08); /* Premium Gold Glow */
-  --glow-3: rgba(148, 163, 184, 0.05); /* Silver Glow */
-
-  background-color: #ffffff !important;
-  color: #1a1a1a !important;
-
-  /* Theme color overrides for standard elements */
-  --color-slate-950: #ffffff; /* Fundo branco!!! */
-  --color-slate-900: #fcfbf9; /* Soft Ivory/Warm Gray */
-  --color-zinc-950: #ffffff;
-  --color-zinc-900: #fafaf9;  /* Elegant puffy card background */
-  --color-zinc-850: #f4f3ee;
-  --color-zinc-800: #e8e6df;
-  --color-neutral-950: #ffffff;
-  --color-neutral-900: #fdfdfb;
-  --color-purple-950: #ffffff;
-  --color-purple-900: #f9f6ff; /* Extremely light cozy lavender */
-  --color-purple-800: #f3effe;
-  --color-purple-700: #e8e0ff;
-  --color-purple-600: #6d28d9; /* Deep royal violet */
-  --color-purple-500: #7c3aed;
-  --color-indigo-950: #ffffff;
-  --color-indigo-900: #f8f6ff;
-
-  /* Dark Charcoal/Espresso Black text for clean readability */
-  --color-slate-100: #1a1a1a; 
-  --color-gray-100: #1c1917;
-  --color-gray-200: #292524;
-  --color-gray-300: #44403c;
-  --color-gray-400: #57534e;
-  --color-gray-500: #78716c;
-
-  /* Dourado (Premium Gold Highlight) */
-  --color-yellow-400: #d4af37; /* Royal Metallic Gold */
-  --color-yellow-300: #c59b27; /* Antique Gold */
-
-  /* Prata / Metal highlight */
-  --color-cyan-400: #94a3b8;   /* Sleek Platinum */
-
-  /* Royal Purple Highlight */
-  --color-pink-500: #6d28d9;   
-  --color-pink-400: #7c3aed;   
+/* Base Body Style */
+body {
+  font-family: "Fredoka", "Space Grotesk", "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Escritas pretas com degradê suave para cor de metal (Sleek Chrome/Silver) */
-.theme-neutral h1,
-.theme-neutral h2,
-.theme-neutral h3:not(.keep-color),
-.theme-neutral .metal-text {
-  background: linear-gradient(135deg, #111111 0%, #4a5568 50%, #718096 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  text-fill-color: transparent !important;
-  display: inline-block;
-  font-family: "Fredoka", sans-serif !important;
+/* ==========================================================================
+   GLASSMORPHISM THEME SWITCHER (APPLE GLASS AESTHETIC)
+   ========================================================================== */
+
+/* 1. LIGHT MODE GLASS */
+#pkxd-app-root.theme-light {
+  background-color: #f7f9fb !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(244, 219, 255, 0.5) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(219, 234, 254, 0.5) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(254, 215, 226, 0.4) 0px, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='1' fill='rgba(124, 58, 237, 0.02)'/%3E%3C/svg%3E") !important;
+  color: #1e293b !important;
 }
 
-/* Permit highlighted child elements to stand out with their colors */
-.theme-neutral h1 *,
-.theme-neutral h2 *,
-.theme-neutral h3 *,
-.theme-neutral h4 *,
-.theme-neutral .metal-text * {
-  -webkit-text-fill-color: initial !important;
-  text-fill-color: initial !important;
-  background-clip: initial !important;
+/* Light mode Glass Containers */
+#pkxd-app-root.theme-light div.rounded-2xl,
+#pkxd-app-root.theme-light div.rounded-3xl,
+#pkxd-app-root.theme-light div.rounded-xl,
+#pkxd-app-root.theme-light div.rounded-lg,
+#pkxd-app-root.theme-light main section,
+#pkxd-app-root.theme-light .glass-panel {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  outline: 1px solid rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.03), 
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  color: #1e293b !important;
+}
+
+/* Text overrides for Light mode */
+#pkxd-app-root.theme-light h1,
+#pkxd-app-root.theme-light h2,
+#pkxd-app-root.theme-light h3,
+#pkxd-app-root.theme-light h4,
+#pkxd-app-root.theme-light .text-white,
+#pkxd-app-root.theme-light .metal-text {
+  color: #0f172a !important;
   background: none !important;
-}
-
-/* Body / General text styling - warm charcoal black, soft child-friendly rounded layout */
-.theme-neutral p,
-.theme-neutral span:not(.text-yellow-300):not(.text-yellow-400):not(.text-fuchsia-400):not(.text-pink-400):not(.text-purple-300):not(.text-emerald-300):not(.text-white):not(.text-yellow-350):not(.font-mono),
-.theme-neutral li,
-.theme-neutral label,
-.theme-neutral input,
-.theme-neutral textarea {
-  color: #1f2937 !important;
-}
-
-/* Golden Highlights & Highlights sections */
-.theme-neutral .text-yellow-300,
-.theme-neutral .text-yellow-400,
-.theme-neutral .text-yellow-350,
-.theme-neutral .text-amber-300,
-.theme-neutral .text-amber-400 {
-  color: #d4af37 !important; /* Rich Gold */
-}
-
-/* Royal Violet Highlights for "the rest" */
-.theme-neutral .text-pink-500,
-.theme-neutral .text-pink-400,
-.theme-neutral .text-purple-300,
-.theme-neutral .text-purple-400,
-.theme-neutral .text-fuchsia-400,
-.theme-neutral .text-cyan-400,
-.theme-neutral .text-indigo-400 {
-  color: #7c3aed !important; /* Royal Purple */
-}
-
-/* Bubbly, child-friendly cards in the neutral layout */
-.theme-neutral div.rounded-2xl,
-.theme-neutral div.rounded-3xl,
-.theme-neutral div.rounded-xl {
-  border-radius: 1.75rem !important;
-  border: 3px solid rgba(197, 168, 128, 0.15) !important;
-  box-shadow: 0 10px 25px -5px rgba(109, 40, 217, 0.04), 0 8px 16px -6px rgba(197, 168, 128, 0.05) !important;
-}
-
-/* CONTAGEM REGRESSIVA EM DOURADO METÁLICO CUTE (Balloon-block style) */
-.theme-neutral #gift-countdown-timer-clocks > div,
-.theme-neutral .grid-cols-4 > div {
-  background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%) !important;
-  border: 3px solid #d4af37 !important;
-  border-bottom-width: 6px !important;
-  border-radius: 1.5rem !important;
-  box-shadow: 0 8px 20px -4px rgba(212, 175, 55, 0.25) !important;
-}
-
-.theme-neutral #gift-countdown-timer-clocks span,
-.theme-neutral .grid-cols-4 span {
-  color: #1a1a1a !important;
-  -webkit-text-fill-color: #1a1a1a !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: initial !important;
   text-shadow: none !important;
-  background-clip: initial !important;
-  font-family: "Fredoka", sans-serif !important;
 }
 
-.theme-neutral #gift-countdown-timer-clocks .text-\[9px\],
-.theme-neutral .grid-cols-4 .text-\[9px\] {
-  color: #c59b27 !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.1em !important;
+#pkxd-app-root.theme-light p,
+#pkxd-app-root.theme-light li,
+#pkxd-app-root.theme-light span:not(.badge),
+#pkxd-app-root.theme-light label {
+  color: #334155 !important;
 }
 
-/* Spoiler / Destaque elements in Gold accent */
-.theme-neutral #spoiler-revealed-state,
-.theme-neutral .border-yellow-400,
-.theme-neutral .border-amber-400 {
-  border: 4px solid #d4af37 !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 12px 36px -8px rgba(212, 175, 55, 0.2) !important;
+/* Clean Form inputs in Light mode */
+#pkxd-app-root.theme-light input,
+#pkxd-app-root.theme-light textarea,
+#pkxd-app-root.theme-light select {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important;
 }
 
-/* Neutralized dark overlays to pristine white panels */
-.theme-neutral .bg-black\/60,
-.theme-neutral .bg-black\/75,
-.theme-neutral .bg-black\/40,
-.theme-neutral .bg-zinc-900\/40,
-.theme-neutral .bg-zinc-950\/40,
-.theme-neutral .bg-purple-950\/45,
-.theme-neutral .bg-slate-900\/50,
-.theme-neutral .bg-slate-950\/80,
-.theme-neutral .bg-slate-900,
-.theme-neutral .bg-slate-950,
-.theme-neutral .bg-zinc-900,
-.theme-neutral .bg-zinc-950,
-.theme-neutral .bg-purple-900,
-.theme-neutral .bg-purple-950,
-.theme-neutral .bg-indigo-900,
-.theme-neutral .bg-indigo-950,
-.theme-neutral .bg-zinc-950\/95,
-.theme-neutral .bg-black\/30 {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(16px) !important;
-  border: 2.5px solid rgba(109, 40, 217, 0.08) !important;
-  box-shadow: 0 10px 30px -10px rgba(109, 40, 217, 0.06) !important;
+#pkxd-app-root.theme-light input::placeholder,
+#pkxd-app-root.theme-light textarea::placeholder {
+  color: #94a3b8 !important;
 }
 
-/* Micro Header Banner - Ultra Elegant White & Gold */
-.theme-neutral .bg-gradient-to-r.from-purple-800.via-pink-600.to-purple-900 {
-  background: #ffffff !important;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.25) !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+/* Buttons in Light Mode - Apple Style */
+#pkxd-app-root.theme-light button:not(.unstyled),
+#pkxd-app-root.theme-light .button-primary {
+  background: rgba(124, 58, 237, 0.08) !important;
+  border: 1px solid rgba(124, 58, 237, 0.2) !important;
+  color: #6d28d9 !important;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.04) !important;
+  text-shadow: none !important;
 }
 
-.theme-neutral .bg-gradient-to-r.from-purple-800.via-pink-600.to-purple-900 * {
-  color: #4a5568 !important;
-}
-
-.theme-neutral .bg-gradient-to-r.from-purple-800.via-pink-600.to-purple-900 strong {
-  color: #c59b27 !important;
-}
-
-.theme-neutral .bg-gradient-to-r.from-purple-800.via-pink-600.to-purple-900 span.bg-black\/30 {
-  background-color: #f5f3ff !important;
-  color: #7c3aed !important;
-  border: 1px solid rgba(124, 58, 237, 0.1) !important;
-}
-
-/* Elegant Chic Navigation Header */
-.theme-neutral #nav-header {
-  background-color: #ffffff !important;
-  border-bottom: 4px solid #d4af37 !important;
-  box-shadow: 0 4px 25px rgba(212, 175, 55, 0.08) !important;
-}
-
-.theme-neutral #nav-header h1 {
-  background: linear-gradient(135deg, #111111 0%, #4a5568 50%, #718096 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  text-fill-color: transparent !important;
-  font-family: "Fredoka", sans-serif !important;
-}
-
-.theme-neutral #nav-header h1 span {
-  color: #d4af37 !important;
-  -webkit-text-fill-color: #d4af37 !important;
-}
-
-.theme-neutral #nav-header p {
-  color: #7c3aed !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.05em !important;
-}
-
-.theme-neutral #nav-header button {
-  background: #ffffff !important;
-  color: #7c3aed !important;
-  border: 2px solid rgba(124, 58, 237, 0.2) !important;
-  border-bottom-width: 4px !important;
-  border-radius: 1rem !important;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06) !important;
-}
-
-.theme-neutral #nav-header button * {
-  color: #7c3aed !important;
-}
-
-.theme-neutral #nav-header button:hover {
-  background: #fbf9ff !important;
-  border-color: #d4af37 !important;
-}
-
-.theme-neutral #nav-header button:hover * {
-  color: #b89753 !important;
-}
-
-/* Playful Royal Purple buttons */
-.theme-neutral button:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(.bg-amber-500):not(#gift-countdown-timer-clocks *):not(.grid-cols-4 *),
-.theme-neutral .bg-gradient-to-r.from-pink-500 {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
-  color: #ffffff !important;
-  border: 2px solid rgba(109, 40, 217, 0.15) !important;
-  border-bottom-width: 4px !important;
-  border-radius: 1.25rem !important;
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.12) !important;
-  font-family: "Fredoka", sans-serif !important;
-}
-
-.theme-neutral button:hover:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(.bg-amber-500):not(#gift-countdown-timer-clocks *):not(.grid-cols-4 *) {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+#pkxd-app-root.theme-light button:not(.unstyled):hover,
+#pkxd-app-root.theme-light .button-primary:hover {
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: #5b21b6 !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.22) !important;
 }
 
-.theme-neutral button:not(.bg-emerald-500):not(.bg-red-500):not(.bg-zinc-800):not(.bg-amber-500) * {
+/* Special High-contrast / Action Buttons in Light Mode */
+#pkxd-app-root.theme-light button.bg-purple-600,
+#pkxd-app-root.theme-light button.bg-neutral-900,
+#pkxd-app-root.theme-light .btn-dark-apple {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12) !important;
+}
+
+#pkxd-app-root.theme-light button.bg-purple-600:hover,
+#pkxd-app-root.theme-light button.bg-neutral-900:hover {
+  background: #1e293b !important;
   color: #ffffff !important;
 }
 
-/* Premium Chic Masthead Hero section overrides */
-.theme-neutral #masthead-hero {
-  background: linear-gradient(180deg, #ffffff 0%, #faf9f6 100%) !important;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.15) !important;
+#pkxd-app-root.theme-light button.bg-emerald-500 {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(16, 185, 129, 0.1) !important;
 }
 
-.theme-neutral #masthead-hero h2 {
-  background: linear-gradient(135deg, #111111 0%, #3a3a3c 50%, #636366 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  text-fill-color: transparent !important;
-  font-family: "Fredoka", sans-serif !important;
+/* Countdown blocks in Light Mode */
+#pkxd-app-root.theme-light .grid-cols-4 > div,
+#pkxd-app-root.theme-light #gift-countdown-timer-clocks > div {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(124, 58, 237, 0.15) !important;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.05) !important;
 }
 
-.theme-neutral #masthead-hero h2 span {
-  background: linear-gradient(135deg, #7c3aed 0%, #d4af37 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  text-fill-color: transparent !important;
+#pkxd-app-root.theme-light .grid-cols-4 span,
+#pkxd-app-root.theme-light #gift-countdown-timer-clocks span {
+  color: #4c1d95 !important;
 }
 
-.theme-neutral #masthead-hero p {
-  color: #4b5563 !important;
-  font-weight: 500 !important;
+#pkxd-app-root.theme-light .grid-cols-4 .text-neutral-400,
+#pkxd-app-root.theme-light .grid-cols-4 .text-neutral-500 {
+  color: #6d28d9 !important;
 }
 
-.theme-neutral #masthead-hero .bg-pink-500\/10 {
-  background-color: #f5f3ff !important;
-  border-color: rgba(124, 58, 237, 0.25) !important;
-  color: #7c3aed !important;
+/* ==========================================================================
+   2. DARK MODE GLASS
+   ========================================================================== */
+#pkxd-app-root.theme-dark {
+  background-color: #0b0616 !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(88, 28, 135, 0.25) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(15, 23, 42, 0.4) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(244, 63, 94, 0.08) 0px, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='1' fill='rgba(255, 255, 255, 0.01)'/%3E%3C/svg%3E") !important;
+  color: #f1f5f9 !important;
 }
 
-.theme-neutral #masthead-hero .bg-pink-500\/10 * {
-  color: #7c3aed !important;
-  fill: #7c3aed !important;
+/* Dark mode Glass Containers */
+#pkxd-app-root.theme-dark div.rounded-2xl,
+#pkxd-app-root.theme-dark div.rounded-3xl,
+#pkxd-app-root.theme-dark div.rounded-xl,
+#pkxd-app-root.theme-dark div.rounded-lg,
+#pkxd-app-root.theme-dark main section,
+#pkxd-app-root.theme-dark .glass-panel {
+  background: rgba(22, 12, 40, 0.5) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  color: #f1f5f9 !important;
+}
+
+/* Text overrides for Dark mode */
+#pkxd-app-root.theme-dark h1,
+#pkxd-app-root.theme-dark h2,
+#pkxd-app-root.theme-dark h3,
+#pkxd-app-root.theme-dark h4,
+#pkxd-app-root.theme-dark .metal-text {
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: initial !important;
+}
+
+#pkxd-app-root.theme-dark p,
+#pkxd-app-root.theme-dark li,
+#pkxd-app-root.theme-dark span:not(.badge),
+#pkxd-app-root.theme-dark label {
+  color: #cbd5e1 !important;
+}
+
+/* Clean Form inputs in Dark mode */
+#pkxd-app-root.theme-dark input,
+#pkxd-app-root.theme-dark textarea,
+#pkxd-app-root.theme-dark select {
+  background: rgba(10, 5, 20, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+#pkxd-app-root.theme-dark input::placeholder,
+#pkxd-app-root.theme-dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Buttons in Dark Mode - Apple Style */
+#pkxd-app-root.theme-dark button:not(.unstyled),
+#pkxd-app-root.theme-dark .button-primary {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+#pkxd-app-root.theme-dark button:not(.unstyled):hover,
+#pkxd-app-root.theme-dark .button-primary:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+/* Special high contrast buttons in Dark Mode */
+#pkxd-app-root.theme-dark button.bg-purple-600,
+#pkxd-app-root.theme-dark button.bg-neutral-900,
+#pkxd-app-root.theme-dark .btn-dark-apple {
+  background: #9333ea !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(147, 51, 234, 0.2) !important;
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.3) !important;
+}
+
+#pkxd-app-root.theme-dark button.bg-purple-600:hover,
+#pkxd-app-root.theme-dark button.bg-neutral-900:hover {
+  background: #a855f7 !important;
+}
+
+#pkxd-app-root.theme-dark button.bg-emerald-500 {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Countdown blocks in Dark Mode */
+#pkxd-app-root.theme-dark .grid-cols-4 > div,
+#pkxd-app-root.theme-dark #gift-countdown-timer-clocks > div {
+  background: rgba(10, 5, 20, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+#pkxd-app-root.theme-dark .grid-cols-4 span,
+#pkxd-app-root.theme-dark #gift-countdown-timer-clocks span {
+  color: #ffffff !important;
+}
+
+#pkxd-app-root.theme-dark .grid-cols-4 .text-neutral-450,
+#pkxd-app-root.theme-dark .grid-cols-4 .text-neutral-400 {
+  color: #cbd5e1 !important;
+}
+
+/* Ensure images always look pristine */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ==========================================================================
+   UTILITIES & DECORATIVE PILLS
+   ========================================================================== */
+.glow-spot {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
 }
 
 @theme {
   --font-sans: "Fredoka", "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
-  /* Overwrite dark panels/backgrounds to use the gorgeous rich deep PK XD purple/indigo hues */
-  --color-slate-950: #1b023d; /* Dark Royal Purple-Indigo background */
-  --color-slate-900: #290854; /* Royal Purple dark */
-  --color-zinc-950: #120029;  /* Deepest Purple-Black */
-  --color-zinc-900: #1e0240;  /* Rich Dark Purple */
-  --color-zinc-850: #280452;
-  --color-zinc-800: #330864;
-  --color-neutral-950: #160033;
-  --color-neutral-900: #24004d;
-  
-  /* Customize specific PK XD Purple spectrum */
-  --color-purple-950: #14002e;
-  --color-purple-900: #24024f;
-  --color-purple-800: #360175;
-  --color-purple-700: #5200aa;
-  --color-purple-600: #7c12eb; /* Vibrant Main PK XD Purple from screen */
-  --color-purple-500: #943bf0;
-  
-  --color-indigo-950: #110029;
-  --color-indigo-900: #21024b;
-  
-  /* Bright accents */
-  --color-yellow-400: #ffe600; /* Vibrant Neon Yellow from screenshot */
-  --color-yellow-300: #ffe600;
-  --color-cyan-400: #00f0ff;   /* Neon Cyan */
-  --color-pink-500: #ff007a;   /* Hot Magenta */
-}
-
-/* Custom background texture replicating playpkxd.com watermark styles */
-.bg-pkxd-texture {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cpath d='M30,30 Q30,25 35,25 Q40,25 40,30 Q40,35 35,35 Q30,35 30,30 Z' fill='rgba(255,255,255,0.025)'/%3E%3Cpath d='M50,30 Q50,25 55,25 Q60,25 60,30 Q60,35 55,35 Q50,35 50,30 Z' fill='rgba(255,255,255,0.025)'/%3E%3Cpath d='M35,48 Q45,55 55,48' stroke='rgba(255,255,255,0.025)' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M100,85 L105,90 M105,85 L100,90' stroke='rgba(255,255,255,0.025)' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='92' cy='25' r='2.5' fill='rgba(255,255,255,0.025)'/%3E%3Cpath d='M15,90 L18,97 L25,94 L15,90' stroke='rgba(255,255,255,0.02)' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-}
-
-.theme-neutral.bg-pkxd-texture,
-.theme-neutral .bg-pkxd-texture {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cpath d='M30,30 Q30,25 35,25 Q40,25 40,30 Q40,35 35,35 Q30,35 30,30 Z' fill='rgba(124,58,237,0.015)'/%3E%3Cpath d='M50,30 Q50,25 55,25 Q60,25 60,30 Q60,35 55,35 Q50,35 50,30 Z' fill='rgba(124,58,237,0.015)'/%3E%3Cpath d='M35,48 Q45,55 55,48' stroke='rgba(124,58,237,0.015)' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M100,85 L105,90 M105,85 L100,90' stroke='rgba(124,58,237,0.015)' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='92' cy='25' r='2.5' fill='rgba(124,58,237,0.015)'/%3E%3Cpath d='M15,90 L18,97 L25,94 L15,90' stroke='rgba(124,58,237,0.01)' stroke-width='2' fill='none'/%3E%3C/svg%3E") !important;
 }
