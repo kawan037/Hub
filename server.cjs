@@ -60,10 +60,17 @@ import_dotenv.default.config();
 var app = (0, import_express.default)();
 var PORT = 3e3;
 app.use(import_express.default.json());
-var vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || "BOjr-tCGr-DdW6_g8F3quXEvVYc7QlkkEnI-c8kslDtX3M839-ga74J-x5H2LBHs3ufvSjlWm_fa0IqTNLEC1Tc",
-  privateKey: process.env.VAPID_PRIVATE_KEY || "SIwRZY-VmYgHBNpfVVwMGsQOG30j1hIusw6snQnQXVI"
-};
+var vapidKeys = (() => {
+  let pub = (process.env.VAPID_PUBLIC_KEY || "").trim();
+  let priv = (process.env.VAPID_PRIVATE_KEY || "").trim();
+  if (!pub || pub.length < 40) {
+    pub = "BOjr-tCGr-DdW6_g8F3quXEvVYc7QlkkEnI-c8kslDtX3M839-ga74J-x5H2LBHs3ufvSjlWm_fa0IqTNLEC1Tc";
+  }
+  if (!priv || priv.length < 40) {
+    priv = "SIwRZY-VmYgHBNpfVVwMGsQOG30j1hIusw6snQnQXVI";
+  }
+  return { publicKey: pub, privateKey: priv };
+})();
 import_web_push.default.setVapidDetails(
   "mailto:kawanyuri35@gmail.com",
   vapidKeys.publicKey,
