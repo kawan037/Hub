@@ -60,22 +60,47 @@ import_dotenv.default.config();
 var app = (0, import_express.default)();
 var PORT = 3e3;
 app.use(import_express.default.json());
+var fallbackPublicKey = "BOjr-tCGr-DdW6_g8F3quXEvVYc7QlkkEnI-c8kslDtX3M839-ga74J-x5H2LBHs3ufvSjlWm_fa0IqTNLEC1Tc";
+var fallbackPrivateKey = "SIwRZY-VmYgHBNpfVVwMGsQOG30j1hIusw6snQnQXVI";
+function isValidPrivateKey(key) {
+  if (!key) return false;
+  try {
+    const buf = Buffer.from(key.trim(), "base64url");
+    return buf.length === 32;
+  } catch (e) {
+    return false;
+  }
+}
 var vapidKeys = (() => {
   let pub = (process.env.VAPID_PUBLIC_KEY || "").trim();
   let priv = (process.env.VAPID_PRIVATE_KEY || "").trim();
-  if (!pub || pub.length < 40) {
-    pub = "BOjr-tCGr-DdW6_g8F3quXEvVYc7QlkkEnI-c8kslDtX3M839-ga74J-x5H2LBHs3ufvSjlWm_fa0IqTNLEC1Tc";
-  }
-  if (!priv || priv.length < 40) {
-    priv = "SIwRZY-VmYgHBNpfVVwMGsQOG30j1hIusw6snQnQXVI";
+  if (!pub || pub.length < 40 || !isValidPrivateKey(priv)) {
+    console.log("[Web Push] Using fallback hardcoded VAPID keys because env keys were missing or invalid.");
+    pub = fallbackPublicKey;
+    priv = fallbackPrivateKey;
   }
   return { publicKey: pub, privateKey: priv };
 })();
-import_web_push.default.setVapidDetails(
-  "mailto:kawanyuri35@gmail.com",
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
+try {
+  import_web_push.default.setVapidDetails(
+    "mailto:kawanyuri35@gmail.com",
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+  );
+  console.log("[Web Push] VAPID details configured successfully.");
+} catch (error) {
+  console.error("[Web Push] Failed to configure VAPID details with primary keys, trying fallback keys...", error);
+  try {
+    import_web_push.default.setVapidDetails(
+      "mailto:kawanyuri35@gmail.com",
+      fallbackPublicKey,
+      fallbackPrivateKey
+    );
+    console.log("[Web Push] Fallback VAPID details configured successfully.");
+  } catch (fallbackError) {
+    console.error("[Web Push] Critical: Both primary and fallback VAPID configurations failed.", fallbackError);
+  }
+}
 var serverStartTime = Date.now() - 5e3;
 async function sendPushNotificationToAll(title, body, url = "/") {
   console.log(`[Web Push] Disparando notifica\xE7\xE3o nativa para todos: "${title}" - "${body}"`);
