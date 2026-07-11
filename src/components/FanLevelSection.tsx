@@ -43,6 +43,7 @@ interface RankedPlayer {
   isCurrentUser?: boolean;
   instagram?: string;
   instagramPublic?: boolean;
+  photoUrl?: string;
 }
 
 export default function FanLevelSection({ 
@@ -153,6 +154,15 @@ export default function FanLevelSection({
   // Real database players
   const [dbPlayers, setDbPlayers] = useState<RankedPlayer[]>([]);
   const [leaderboard, setLeaderboard] = useState<RankedPlayer[]>([]);
+  const [localPhotoUrl, setLocalPhotoUrl] = useState(() => localStorage.getItem('pkxd_custom_profile_image') || '');
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setLocalPhotoUrl(localStorage.getItem('pkxd_custom_profile_image') || '');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Monthly Winner State
   interface MonthlyWinner {
@@ -354,6 +364,7 @@ export default function FanLevelSection({
             flames: Number(fireStreak) || 1,
             instagram: instagram || '',
             instagramPublic: instagramPublic !== false,
+            photoUrl: localPhotoUrl || user.photoURL || '',
             updatedAt: Date.now()
           };
 
@@ -408,6 +419,7 @@ export default function FanLevelSection({
           flames: Number(fireStreak) || 0,
           instagram: instagram || '',
           instagramPublic: instagramPublic !== false,
+          photoUrl: localPhotoUrl || user.photoURL || '',
           updatedAt: Date.now()
         };
 
@@ -426,7 +438,7 @@ export default function FanLevelSection({
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [user, nickname, level, xp, fireStreak, instagram, instagramPublic, isLoadingProfile]);
+  }, [user, nickname, level, xp, fireStreak, instagram, instagramPublic, localPhotoUrl, isLoadingProfile]);
 
   // Listen to top players from Firestore collection
   useEffect(() => {
@@ -445,7 +457,8 @@ export default function FanLevelSection({
             xp: Number(data.xp) || 0,
             flames: Number(data.flames) || 0,
             instagram: data.instagram || '',
-            instagramPublic: data.instagramPublic !== false
+            instagramPublic: data.instagramPublic !== false,
+            photoUrl: data.photoUrl || ''
           });
         }
       });
@@ -1432,9 +1445,20 @@ export default function FanLevelSection({
                       )}
                     </div>
 
-                    {/* Simple avatar icon */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-orange-500 text-black' : 'bg-zinc-800 text-gray-400'}`}>
-                      <User className="w-4 h-4" />
+                    {/* Round photo or simple avatar icon */}
+                    <div className="relative w-8 h-8 flex-shrink-0">
+                      {player.photoUrl ? (
+                        <img 
+                          src={player.photoUrl} 
+                          alt={player.name}
+                          className="w-8 h-8 rounded-full object-cover border border-white/10"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-orange-500 text-black' : 'bg-zinc-800 text-gray-400'}`}>
+                          <User className="w-4 h-4" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Player Details */}

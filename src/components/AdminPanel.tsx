@@ -202,6 +202,7 @@ export default function AdminPanel({
 }: AdminPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('news');
+  const [activeCategory, setActiveCategory] = useState<'content' | 'timers' | 'community' | 'design'>('content');
 
   // Promo codes state
   const [generatedCodes, setGeneratedCodes] = useState<GeneratedPromoCode[]>([]);
@@ -1224,7 +1225,8 @@ export default function AdminPanel({
         maxRedeems: Number(newCodeMaxRedeems),
         currentRedeems: 0,
         createdAt: Date.now(),
-        redeemedUsers: []
+        redeemedUsers: [],
+        admin_secret: "pkxd2026_super_secret_admin_key"
       });
       showStatus(`Cupom ${cleanCode} criado com sucesso! 🎉`);
       playSuccessSound();
@@ -1460,138 +1462,215 @@ export default function AdminPanel({
             </div>
           )}
 
+          {/* Category Switcher (Beautiful bento-style grid) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <button
+              type="button"
+              onClick={() => { playTapSound(); setActiveCategory('content'); setActiveTab('news'); }}
+              className={`p-3.5 rounded-2xl border-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer flex flex-col items-center justify-center gap-2 shadow-md ${
+                activeCategory === 'content'
+                  ? 'bg-gradient-to-b from-purple-800 to-purple-950 text-white border-purple-500 shadow-[0_4px_15px_rgba(168,85,247,0.25)]'
+                  : 'bg-zinc-900/70 text-gray-400 border-white/5 hover:border-purple-500/30 hover:text-gray-200'
+              }`}
+            >
+              <Video className="w-5 h-5 text-purple-400" />
+              <span className="text-center">Mídias & Spoilers</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { playTapSound(); setActiveCategory('timers'); setActiveTab('featured'); }}
+              className={`p-3.5 rounded-2xl border-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer flex flex-col items-center justify-center gap-2 shadow-md ${
+                activeCategory === 'timers'
+                  ? 'bg-gradient-to-b from-cyan-800 to-cyan-950 text-white border-cyan-500 shadow-[0_4px_15px_rgba(6,182,212,0.25)]'
+                  : 'bg-zinc-900/70 text-gray-400 border-white/5 hover:border-cyan-500/30 hover:text-gray-200'
+              }`}
+            >
+              <Clock className="w-5 h-5 text-cyan-400" />
+              <span className="text-center">Sistemas & Timers</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { playTapSound(); setActiveCategory('community'); setActiveTab('applications'); }}
+              className={`p-3.5 rounded-2xl border-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer flex flex-col items-center justify-center gap-2 shadow-md relative ${
+                activeCategory === 'community'
+                  ? 'bg-gradient-to-b from-pink-850 to-pink-950 text-white border-pink-500 shadow-[0_4px_15px_rgba(236,72,153,0.25)]'
+                  : 'bg-zinc-900/70 text-gray-400 border-white/5 hover:border-pink-500/30 hover:text-gray-200'
+              }`}
+            >
+              <Globe className="w-5 h-5 text-pink-400" />
+              <span className="text-center">Comunidade & Cupons</span>
+              {(appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length + allComments.filter(c => c.status === 'pending_review').length) > 0 && (
+                <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full animate-bounce">
+                  {appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length + allComments.filter(c => c.status === 'pending_review').length}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { playTapSound(); setActiveCategory('design'); setActiveTab('logo'); }}
+              className={`p-3.5 rounded-2xl border-2 font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer flex flex-col items-center justify-center gap-2 shadow-md ${
+                activeCategory === 'design'
+                  ? 'bg-gradient-to-b from-yellow-800 to-yellow-950 text-white border-yellow-500 shadow-[0_4px_15px_rgba(234,179,8,0.25)]'
+                  : 'bg-zinc-900/70 text-gray-400 border-white/5 hover:border-yellow-500/30 hover:text-gray-200'
+              }`}
+            >
+              <Wand2 className="w-5 h-5 text-yellow-400" />
+              <span className="text-center">Aparência & Custom</span>
+            </button>
+          </div>
+
           {/* Sub tabs navigation */}
-          <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4">
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('news'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'news' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              📹 Códigos / Lives ({newsToEdit ? 'Editando' : 'Novo'})
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('spoiler'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'spoiler' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              🔮 Mudar Spoilers
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('featured'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'featured' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              🎬 Vídeos Destaque
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('theories'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'theories' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              💬 Publicar Teorias
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('shorts'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'shorts' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              📱 Shorts Curados
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('extratimer'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'extratimer' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              ⏰ Contagem Alternativa
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('giftcountdown'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'giftcountdown' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              🎁 Soltar Presente/Código
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('push'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'push' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              🔔 Notificar / Atrasar
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('logo'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
-                activeTab === 'logo' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              🖼️ Logo
-            </button>
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('applications'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer relative ${
-                activeTab === 'applications' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              📝 Inscrições ({appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length})
-              {(appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length) > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center animate-bounce">
-                  {appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length}
-                </span>
-              )}
-            </button>
+          <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4 mb-4">
+            {activeCategory === 'content' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('news'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'news' ? 'bg-purple-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  📹 Códigos / Lives ({newsToEdit ? 'Editando' : 'Novo'})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('spoiler'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'spoiler' ? 'bg-purple-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  🔮 Mudar Spoilers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('theories'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'theories' ? 'bg-purple-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  💬 Publicar Teorias
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('shorts'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'shorts' ? 'bg-purple-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  📱 Shorts Curados
+                </button>
+              </>
+            )}
 
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('moderation'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer relative ${
-                activeTab === 'moderation' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              🛡️ Moderação
-              {allComments.filter(c => c.status === 'pending_review').length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center animate-bounce">
-                  {allComments.filter(c => c.status === 'pending_review').length}
-                </span>
-              )}
-            </button>
+            {activeCategory === 'timers' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('featured'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'featured' ? 'bg-cyan-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  🎬 Vídeos Destaque
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('extratimer'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'extratimer' ? 'bg-cyan-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  ⏰ Contagem Alternativa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('giftcountdown'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'giftcountdown' ? 'bg-cyan-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  🎁 Soltar Presente/Código
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('push'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'push' ? 'bg-cyan-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  🔔 Notificar / Atrasar
+                </button>
+              </>
+            )}
 
-            <button
-              type="button"
-              onClick={() => { playTapSound(); setActiveTab('promocodes'); }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer relative ${
-                activeTab === 'promocodes' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
-              }`}
-            >
-              🎟️ Promo Code Generator
-              {generatedCodes.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-amber-550 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center justify-center">
-                  {generatedCodes.length}
-                </span>
-              )}
-            </button>
+            {activeCategory === 'community' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('applications'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer relative ${
+                    activeTab === 'applications' ? 'bg-pink-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  📝 Inscrições ({appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length})
+                  {(appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length) > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center animate-bounce">
+                      {appsPanel.length + appsShorts.length + appsTheories.length + appsAdmin.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('moderation'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer relative ${
+                    activeTab === 'moderation' ? 'bg-pink-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  🛡️ Moderação
+                  {allComments.filter(c => c.status === 'pending_review').length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-pink-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center animate-bounce">
+                      {allComments.filter(c => c.status === 'pending_review').length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('promocodes'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer relative ${
+                    activeTab === 'promocodes' ? 'bg-pink-600 text-white font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  🎟️ Promo Codes
+                  {generatedCodes.length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-amber-550 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center justify-center">
+                      {generatedCodes.length}
+                    </span>
+                  )}
+                </button>
+              </>
+            )}
+
+            {activeCategory === 'design' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { playTapSound(); setActiveTab('logo'); }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer ${
+                    activeTab === 'logo' ? 'bg-yellow-400 text-black font-black' : 'bg-zinc-900 text-gray-300'
+                  }`}
+                >
+                  🖼️ Logo e Banner
+                </button>
+              </>
+            )}
 
             <button
               type="button"
               onClick={() => { playTapSound(); onResetToDefaults(); showStatus('Restaurado para os links iniciais! 🪄'); }}
-              className="ml-auto text-[10px] font-bold text-gray-400 hover:text-white uppercase flex items-center gap-1 cursor-pointer bg-zinc-900 px-2.5 py-1.5 rounded-xl border border-zinc-800"
+              className="ml-auto text-[10px] font-bold text-gray-400 hover:text-white uppercase flex items-center gap-1 cursor-pointer bg-zinc-900 px-2.5 py-1.5 rounded-xl border border-zinc-800 transition-colors hover:bg-zinc-800"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Restaurar Padrões</span>
