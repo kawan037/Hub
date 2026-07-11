@@ -40,9 +40,9 @@ export default function AppleProfileHeader({
   showAdminPanel,
   setShowAdminPanel
 }: AppleProfileHeaderProps) {
-  // Theme state: light or dark (default to light for the pristine Apple vibe, switchable)
+  // Theme state: light or dark (default to dark for the pristine Apple purple vibe, switchable)
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('pkxd_theme_mode') as 'light' | 'dark') || 'light';
+    return (localStorage.getItem('pkxd_theme_mode') as 'light' | 'dark') || 'dark';
   });
 
   // Nickname, Bio and Instagram states
@@ -173,18 +173,40 @@ export default function AppleProfileHeader({
     localStorage.setItem('pkxd_owned_avatars', JSON.stringify(ownedAvatars));
   }, [ownedAvatars]);
 
+  // Hook up global listener for promo code resource claims
+  useEffect(() => {
+    const handleAddResources = (e: Event) => {
+      const customEvent = e as CustomEvent<{ gems: number; coins: number }>;
+      if (customEvent && customEvent.detail) {
+        const { gems: gemsToAdd, coins: coinsToAdd } = customEvent.detail;
+        setGems(prev => prev + (gemsToAdd || 0));
+        setCoins(prev => prev + (coinsToAdd || 0));
+      }
+    };
+    window.addEventListener('pkxd_add_gems_coins', handleAddResources);
+    return () => {
+      window.removeEventListener('pkxd_add_gems_coins', handleAddResources);
+    };
+  }, []);
+
   // Alert system
   const showAlert = (msg: string) => {
     setNotif(msg);
     setTimeout(() => setNotif(null), 4000);
   };
 
-  // Claim Daily reward (Since "nem todos terão 3 gemas", users can click to earn free Gems/Coins!)
+  // Claim Daily reward redirect (Coins and Gems cannot be registered just by clicking)
   const handleClaimFreeReward = () => {
-    triggerAudio('success');
-    setGems(prev => prev + 1000);
-    setCoins(prev => prev + 5000);
-    showAlert("🎁 Incrível! Você resgatou +1.000 Joias 💎 e +5.000 Moedas 🪙 grátis!");
+    triggerAudio('tap');
+    showAlert("⚠️ Joias e Moedas não podem ser obtidas clicando! Resgate um código ativo na seção de cupons abaixo!");
+    const redeemerBox = document.getElementById('promo-code-redeemer-box');
+    if (redeemerBox) {
+      redeemerBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      redeemerBox.classList.add('ring-4', 'ring-purple-400', 'duration-300');
+      setTimeout(() => {
+        redeemerBox.classList.remove('ring-4', 'ring-purple-400');
+      }, 2000);
+    }
   };
 
   // Save profile updates

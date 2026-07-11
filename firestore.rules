@@ -130,5 +130,11 @@ service cloud.firestore {
     match /custom_avatars/{avatarId} {
       allow read, write: if true;
     }
+
+    // Generated promo codes rules
+    match /generated_promo_codes/{codeId} {
+      allow read, update: if true;
+      allow create, delete: if isAdmin() || isDeletable();
+    }
   }
 }

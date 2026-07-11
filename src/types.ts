@@ -108,4 +108,12 @@ export interface DailyMission {
   type: 'post' | 'spin' | 'chest' | 'like' | 'visit_whatsapp';
 }
 
-
+export interface GeneratedPromoCode {
+  code: string;
+  gems: number;
+  coins: number;
+  maxRedeems: number;
+  currentRedeems: number;
+  createdAt: number;
+  redeemedUsers: string[];
+}

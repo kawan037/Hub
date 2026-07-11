@@ -1,7 +1,9 @@
-import React, { useRef } from 'react';
-import { Ticket, ExternalLink, Play, Trash2, Edit2, Video, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Ticket, ExternalLink, Play, Trash2, Edit2, Video, Sparkles, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2, ShieldAlert, Loader2 } from 'lucide-react';
 import { NewsItem } from '../types';
-import { playTapSound } from '../utils/audio';
+import { playTapSound, playSuccessSound } from '../utils/audio';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db, auth } from '../firebase';
 
 interface PromoCodeRedeemerProps {
   videos: NewsItem[];
@@ -12,6 +14,131 @@ interface PromoCodeRedeemerProps {
 
 export default function PromoCodeRedeemer({ videos, isAdmin, onDeleteVideo, onEditVideo }: PromoCodeRedeemerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [codeText, setCodeText] = useState('');
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemResult, setRedeemResult] = useState<{ success: boolean; msg: string } | null>(null);
+
+  const handleRedeemCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanCode = codeText.toUpperCase().trim().replace(/\s+/g, '');
+    if (!cleanCode) {
+      playTapSound();
+      setRedeemResult({ success: false, msg: '⚠️ Por favor, digite um código de cupom válido!' });
+      return;
+    }
+
+    setIsRedeeming(true);
+    playTapSound();
+    setRedeemResult(null);
+
+    try {
+      // 1. Check in Firestore
+      const docRef = doc(db, 'generated_promo_codes', cleanCode);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        // Check redemption limits
+        if ((data.currentRedeems || 0) >= (data.maxRedeems || 0)) {
+          setRedeemResult({ 
+            success: false, 
+            msg: `⚠️ O cupom "${cleanCode}" atingiu o limite de resgates e expirou!` 
+          });
+          return;
+        }
+
+        // Check duplicate redeems
+        const userId = auth.currentUser?.uid || localStorage.getItem('pkxd_username_nickname') || 'Koosh';
+        const redeemedList = data.redeemedUsers || [];
+        if (redeemedList.includes(userId)) {
+          setRedeemResult({ 
+            success: false, 
+            msg: `⚠️ Você já resgatou o cupom "${cleanCode}" nesta conta!` 
+          });
+          return;
+        }
+
+        // Increment redemption count and append user ID
+        const updatedList = [...redeemedList, userId];
+        await updateDoc(docRef, {
+          currentRedeems: (data.currentRedeems || 0) + 1,
+          redeemedUsers: updatedList
+        });
+
+        // Trigger resource update event
+        window.dispatchEvent(new CustomEvent('pkxd_add_gems_coins', {
+          detail: { gems: data.gems || 0, coins: data.coins || 0 }
+        }));
+
+        playSuccessSound();
+        setRedeemResult({
+          success: true,
+          msg: `🎉 Cupom resgatado com sucesso! Você ganhou +${data.gems || 0} Joias 💎 e +${data.coins || 0} Moedas 🪙!`
+        });
+        setCodeText('');
+        return;
+      }
+
+      // 2. Offline / Hardcoded codes fallback
+      const fallbacks: Record<string, { gems: number; coins: number }> = {
+        'WELCOME': { gems: 50, coins: 2000 },
+        'PKXD2026': { gems: 100, coins: 5000 },
+        'ROXOGLASS': { gems: 150, coins: 10000 },
+        'CENTRAL50': { gems: 50, coins: 3000 }
+      };
+
+      if (cleanCode in fallbacks) {
+        const reward = fallbacks[cleanCode];
+        
+        // Check duplicate fallback redeems
+        let localRedeemed: string[] = [];
+        try {
+          localRedeemed = JSON.parse(localStorage.getItem('pkxd_redeemed_fallbacks') || '[]');
+        } catch (_) {}
+
+        if (localRedeemed.includes(cleanCode)) {
+          setRedeemResult({ 
+            success: false, 
+            msg: `⚠️ Você já resgatou o cupom "${cleanCode}" nesta conta!` 
+          });
+          return;
+        }
+
+        // Save to duplicate checklist
+        localRedeemed.push(cleanCode);
+        localStorage.setItem('pkxd_redeemed_fallbacks', JSON.stringify(localRedeemed));
+
+        // Trigger resource update event
+        window.dispatchEvent(new CustomEvent('pkxd_add_gems_coins', {
+          detail: { gems: reward.gems, coins: reward.coins }
+        }));
+
+        playSuccessSound();
+        setRedeemResult({
+          success: true,
+          msg: `🎉 Cupom Especial resgatado! Você ganhou +${reward.gems} Joias 💎 e +${reward.coins} Moedas 🪙!`
+        });
+        setCodeText('');
+        return;
+      }
+
+      // 3. Fallback to not found
+      setRedeemResult({ 
+        success: false, 
+        msg: `❌ Cupom "${cleanCode}" inválido ou expirado! Siga os criadores abaixo para encontrar novos cupons ativos.` 
+      });
+
+    } catch (err: any) {
+      console.error("Erro no resgate do cupom:", err);
+      setRedeemResult({ 
+        success: false, 
+        msg: `❌ Ocorreu um erro ao processar o resgate: ${err.message}` 
+      });
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
   
   const handleRedeemClick = () => {
     playTapSound();
@@ -100,6 +227,62 @@ export default function PromoCodeRedeemer({ videos, isAdmin, onDeleteVideo, onEd
               </span>
             </div>
           </div>
+        </div>
+
+        {/* IN-APP CODE REDEEMER FORM */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 shadow-inner">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+            <h4 className="text-xs font-black uppercase text-amber-400 tracking-wider">Área de Resgate Direct-Glow 🎟️</h4>
+          </div>
+          
+          <p className="text-[11px] text-gray-300 font-sans leading-relaxed">
+            Tem um código de criador ou um código promocional ativo? Digite-o abaixo para receber instantaneamente suas Joias e Moedas em seu perfil! (Experimente os códigos iniciais de Boas-vindas: <strong className="text-amber-400">WELCOME</strong> ou <strong className="text-purple-400">ROXOGLASS</strong>!)
+          </p>
+
+          <form onSubmit={handleRedeemCode} className="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="text"
+              value={codeText}
+              onChange={(e) => setCodeText(e.target.value)}
+              placeholder="Digite o código aqui (Ex: ROXOGLASS)"
+              className="flex-1 bg-black/60 border border-white/10 hover:border-white/20 rounded-xl px-4 py-3 text-xs font-mono font-black uppercase tracking-widest text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 text-center sm:text-left"
+              disabled={isRedeeming}
+            />
+            <button
+              type="submit"
+              disabled={isRedeeming}
+              className="px-6 py-3 bg-amber-400 hover:bg-amber-300 disabled:bg-zinc-800 text-black font-sans font-black text-xs uppercase rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-md"
+            >
+              {isRedeeming ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
+                  <span>PROCESSANDO...</span>
+                </>
+              ) : (
+                <>
+                  <Ticket className="w-3.5 h-3.5 fill-black" />
+                  <span>RESGATAR COIN/GEMA ⚡</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Feedback message */}
+          {redeemResult && (
+            <div className={`p-3.5 rounded-xl border flex items-start gap-2.5 text-xs font-sans leading-relaxed transition-all ${
+              redeemResult.success 
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' 
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-300'
+            }`}>
+              {redeemResult.success ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+              ) : (
+                <ShieldAlert className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+              )}
+              <span>{redeemResult.msg}</span>
+            </div>
+          )}
         </div>
 
         {/* Info Card / Explainer */}

@@ -206,9 +206,28 @@
         "createdAt": { "type": "number" }
       },
       "required": ["id", "authorName", "authorId", "content", "likes", "createdAt"]
+    },
+    "GeneratedPromoCode": {
+      "title": "Generated Promo Code",
+      "description": "An in-app promo code created by admin with redeem limits",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "gems": { "type": "number" },
+        "coins": { "type": "number" },
+        "maxRedeems": { "type": "number" },
+        "currentRedeems": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "redeemedUsers": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["code", "gems", "coins", "maxRedeems", "currentRedeems", "createdAt", "redeemedUsers"]
     }
   },
   "firestore": {
+    "/generated_promo_codes/{codeId}": {
+      "schema": "GeneratedPromoCode",
+      "description": "Collection of generated promo codes with redeem limits"
+    },
     "/posts/{postId}": {
       "schema": "Post",
       "description": "Collection of social posts shared by users on PK XD Central"
