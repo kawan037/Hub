@@ -1982,13 +1982,19 @@ export default function AdminPanel({
                         </p>
                         <div className="mt-2 pl-3 border-l-2 border-indigo-500 space-y-2.5">
                           <div>
-                            <span className="text-[10px] text-gray-400 block uppercase font-bold">1️⃣ Domínio do Site Final:</span>
+                            <span className="text-[10px] text-gray-400 block uppercase font-bold">1️⃣ Domínio Personalizado Principal:</span>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <code className="text-cyan-300 bg-zinc-950 px-2 py-1 rounded text-xs select-all font-mono font-bold">pkxdcentral.github.io</code>
+                              <code className="text-cyan-300 bg-zinc-950 px-2 py-1 rounded text-xs select-all font-mono font-bold">pkxdcentral.site</code>
                             </div>
                           </div>
                           <div>
-                            <span className="text-[10px] text-gray-400 block uppercase font-bold">2️⃣ Domínio de Testes Atual (Para testar agora):</span>
+                            <span className="text-[10px] text-gray-400 block uppercase font-bold">2️⃣ Domínio Backup (GitHub Pages original):</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <code className="text-purple-300 bg-zinc-950 px-2 py-1 rounded text-xs select-all font-mono font-bold">pkxdcentral.github.io</code>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-gray-400 block uppercase font-bold">3️⃣ Domínio de Testes Atual (Para testar agora):</span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <code className="text-amber-300 bg-zinc-950 px-2 py-1 rounded text-xs select-all font-mono font-bold">{window.location.hostname}</code>
                             </div>
