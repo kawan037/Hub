@@ -34,17 +34,23 @@ export default function PromoCodeRedeemer({ videos, isAdmin, onDeleteVideo, onEd
     try {
       // 1. Check in Firestore 'promo_codes' first
       let docRef = doc(db, 'promo_codes', cleanCode);
-      let docSnap = await getDoc(docRef);
-
-      // Fallback to 'generated_promo_codes' if not in 'promo_codes'
+      let docSnap = null;
       let usedCollection = 'promo_codes';
-      if (!docSnap.exists()) {
-        docRef = doc(db, 'generated_promo_codes', cleanCode);
+
+      try {
         docSnap = await getDoc(docRef);
-        usedCollection = 'generated_promo_codes';
+
+        // Fallback to 'generated_promo_codes' if not in 'promo_codes'
+        if (!docSnap || !docSnap.exists()) {
+          docRef = doc(db, 'generated_promo_codes', cleanCode);
+          docSnap = await getDoc(docRef);
+          usedCollection = 'generated_promo_codes';
+        }
+      } catch (firestoreErr) {
+        console.warn("Firestore promo code lookup failed, checking local fallbacks:", firestoreErr);
       }
 
-      if (docSnap.exists()) {
+      if (docSnap && docSnap.exists()) {
         const data = docSnap.data();
         
         // Check redemption limits

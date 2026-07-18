@@ -128,7 +128,10 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
       triggerAudio('tap');
       setLoading(true);
       for (const item of DEFAULT_ARTES) {
-        await addDoc(collection(db, 'art_assets'), item);
+        await addDoc(collection(db, 'art_assets'), {
+          ...item,
+          admin_secret: "pkxd2026_super_secret_admin_key"
+        });
       }
       showToast("✨ Pacote de artes iniciais restaurado com sucesso! 🎨", "success");
       triggerAudio('success');
@@ -161,7 +164,8 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
         imageUrl: newImgUrl.trim(),
         downloadUrl: newDownloadUrl.trim() || newImgUrl.trim(),
         category: finalCat,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        admin_secret: "pkxd2026_super_secret_admin_key"
       });
 
       // Clear fields
