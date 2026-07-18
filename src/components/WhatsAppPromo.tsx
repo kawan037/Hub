@@ -198,7 +198,7 @@ export default function WhatsAppPromo({ channelUrl, onAddXP }: WhatsAppPromoProp
             </div>
 
             <p className="font-sans text-xs text-gray-400">
-              ⚡ <strong className="text-emerald-300">Gostou do Hub?</strong> Copie o link do canal ou use o botão para compartilhar os spoilers e códigos legítimos com todo o seu clã de amigos no WhatsApp!
+              ⚡ <strong className="text-emerald-300">Gostou da Central?</strong> Copie o link do canal ou use o botão para compartilhar os spoilers e códigos legítimos com todo o seu clã de amigos no WhatsApp!
             </p>
           </div>
 

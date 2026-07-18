@@ -2181,7 +2181,7 @@ export default function App() {
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
-              <span>{isApplicationsRoute ? 'Voltar ao Hub' : 'Inscrições 📝'}</span>
+              <span>{isApplicationsRoute ? 'Voltar à Central' : 'Inscrições 📝'}</span>
             </button>
 
             {/* Admin toggle Button design */}
@@ -2902,7 +2902,7 @@ export default function App() {
                   <span className="text-xl">📈</span>
                   <h4 className="font-bold text-sm text-yellow-300">Comunidade Viva</h4>
                   <p className="text-xs text-gray-300 leading-relaxed">
-                    Mais do que apenas um site, somos um hub parceiro focado em unir os jogadores de PK XD. Venha debater teorias e trocar itens virtuais com a gente!
+                    Mais do que apenas um site, somos uma central parceira focada em unir os jogadores de PK XD. Venha debater teorias e trocar itens virtuais com a gente!
                   </p>
                 </div>
 

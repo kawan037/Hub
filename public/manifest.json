@@ -1,6 +1,6 @@
 {
-  "name": "PKXD Hub",
-  "short_name": "PKXD Hub",
+  "name": "PKXD Central",
+  "short_name": "PKXD Central",
   "description": "Central PK XD - Spoilers, Códigos, Novidades e Comunidade!",
   "start_url": "./index.html",
   "display": "standalone",
@@ -9,9 +9,9 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "./favicon.svg",
+      "src": "./favicon.png",
       "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

@@ -350,7 +350,7 @@ export default function ApplicationsSection({
           className="px-3 sm:px-4 py-2 sm:py-2.5 bg-zinc-900/85 hover:bg-purple-950 text-purple-300 hover:text-white rounded-xl border border-purple-500/30 transition-all duration-150 cursor-pointer flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md"
         >
           <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Voltar <span className="hidden xs:inline">ao Hub</span></span>
+          <span>Voltar <span className="hidden xs:inline">à Central</span></span>
         </button>
 
         <div className="flex items-center gap-2">
