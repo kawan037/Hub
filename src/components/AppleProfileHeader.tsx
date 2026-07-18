@@ -206,10 +206,18 @@ export default function AppleProfileHeader({
   // Sync nickname and bio based on user login state
   useEffect(() => {
     if (!user) {
-      setNickname('Koosh');
+      const savedNickname = localStorage.getItem('pkxd_username_nickname');
+      if (savedNickname && savedNickname.startsWith('Convidado_')) {
+        setNickname(savedNickname);
+      } else {
+        const randomNum = String(Math.floor(10 + Math.random() * 980)).padStart(2, '0');
+        const guestName = `Convidado_${randomNum}`;
+        localStorage.setItem('pkxd_username_nickname', guestName);
+        setNickname(guestName);
+      }
     } else {
       const savedNickname = localStorage.getItem('pkxd_username_nickname');
-      if (savedNickname && savedNickname !== 'Koosh') {
+      if (savedNickname && savedNickname !== 'Koosh' && !savedNickname.startsWith('Convidado_')) {
         setNickname(savedNickname);
       } else if (user.displayName) {
         setNickname(user.displayName.replace(/\s+/g, '_'));
@@ -218,6 +226,10 @@ export default function AppleProfileHeader({
       }
     }
   }, [user]);
+
+  useEffect(() => {
+    setEditName(nickname);
+  }, [nickname]);
 
   // Friends Sync Logic
   useEffect(() => {
@@ -830,7 +842,7 @@ export default function AppleProfileHeader({
                     <input
                       type="text"
                       maxLength={15}
-                      value={!user ? 'Koosh' : editName}
+                      value={editName}
                       disabled={!user}
                       onChange={(e) => setEditName(e.target.value)}
                       placeholder="Ex: Koosh"

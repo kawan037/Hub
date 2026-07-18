@@ -1093,7 +1093,8 @@ export default function App() {
         localStorage.setItem('pkxd_fan_level', '1');
         localStorage.setItem('pkxd_fan_xp', '0');
         localStorage.setItem('pkxd_fire_streak', '1');
-        localStorage.setItem('pkxd_username_nickname', 'Jogador_Convidado');
+        const randomNum = String(Math.floor(10 + Math.random() * 980)).padStart(2, '0');
+        localStorage.setItem('pkxd_username_nickname', `Convidado_${randomNum}`);
         localStorage.removeItem('pkxd_user_instagram');
         localStorage.setItem('pkxd_user_instagram_public', 'true');
         

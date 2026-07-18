@@ -82,6 +82,8 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
   const [newImgUrl, setNewImgUrl] = useState("");
   const [newDownloadUrl, setNewDownloadUrl] = useState("");
   const [newCategory, setNewCategory] = useState("Renders");
+  const [isCustomCat, setIsCustomCat] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
 
   // Show a temporal alert toast inside this section
   const showToast = (msg: string, type: 'success' | 'info' = 'success') => {
@@ -149,6 +151,8 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
       return;
     }
 
+    const finalCat = isCustomCat ? (customCategory.trim() || "Outros") : newCategory;
+
     try {
       triggerAudio('tap');
       const docRef = await addDoc(collection(db, 'art_assets'), {
@@ -156,7 +160,7 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
         description: newDesc.trim() || "Use livremente nos seus vídeos do YouTube e redes sociais! 🎬✨",
         imageUrl: newImgUrl.trim(),
         downloadUrl: newDownloadUrl.trim() || newImgUrl.trim(),
-        category: newCategory,
+        category: finalCat,
         createdAt: Date.now()
       });
 
@@ -166,6 +170,8 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
       setNewImgUrl("");
       setNewDownloadUrl("");
       setNewCategory("Renders");
+      setCustomCategory("");
+      setIsCustomCat(false);
       setShowAddModal(false);
 
       showToast("🎉 Nova arte adicionada com sucesso! 🌟", "success");
@@ -205,8 +211,14 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
     }, 2000);
   };
 
-  // Categories list
-  const categories = ["Todas", "Renders", "Logos", "Fundos", "Overlays", "Outros"];
+  // Categories list - dynamically includes any newly created categories by the admin
+  const categories = React.useMemo(() => {
+    const base = ["Todas", "Renders", "Logos", "Fundos", "Overlays", "Outros"];
+    const uniqueFromDb = Array.from(new Set(artes.map(a => a.category).filter(Boolean)));
+    // Add any unique category from database that isn't in base
+    const extra = uniqueFromDb.filter(c => !base.includes(c) && c !== "Todas" && c !== "CUSTOM");
+    return [...base, ...extra];
+  }, [artes]);
 
   // Filtered list
   const filteredArtes = categoryFilter === "Todas" 
@@ -501,7 +513,15 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
                 <label className="text-[10px] font-extrabold uppercase text-neutral-400">Categoria</label>
                 <select
                   value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategory(val);
+                    if (val === "CUSTOM") {
+                      setIsCustomCat(true);
+                    } else {
+                      setIsCustomCat(false);
+                    }
+                  }}
                   className="w-full px-3 py-1.5 bg-neutral-800 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold cursor-pointer"
                 >
                   <option value="Renders">Renders (Personagens)</option>
@@ -509,7 +529,27 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
                   <option value="Fundos">Fundos</option>
                   <option value="Overlays">Overlays / Borda de Cam</option>
                   <option value="Outros">Outros</option>
+                  <option value="CUSTOM">➕ Criar Nova Categoria...</option>
                 </select>
+              </div>
+
+              {isCustomCat && (
+                <div className="space-y-1 animate-scale-up">
+                  <label className="text-[10px] font-extrabold uppercase text-pink-400">Nome da Nova Categoria</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Miniaturas, Divisórias..."
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="w-full px-3 py-2 bg-black/40 border border-pink-500/30 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold"
+                  />
+                </div>
+              )}
+
+              <div className="text-[10px] text-zinc-400 bg-black/30 p-2.5 rounded-xl border border-white/5 leading-relaxed space-y-1">
+                <p className="font-extrabold text-pink-400 uppercase tracking-wider">💡 Dica de Upload de Galeria:</p>
+                <p>Você pode enviar qualquer imagem de sua galeria/computador para sites gratuitos como <a href="https://postimages.org/" target="_blank" rel="noreferrer" className="text-pink-400 underline">Postimages</a>, <a href="https://imgur.com/" target="_blank" rel="noreferrer" className="text-pink-400 underline">Imgur</a> ou pelo Discord, e colar o <strong>link direto da imagem</strong> (terminando em .png, .jpg) nos campos de links acima!</p>
               </div>
 
               <div className="flex gap-2 pt-2">
