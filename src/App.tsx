@@ -37,7 +37,9 @@ import {
   Menu,
   ChevronRight,
   AlertTriangle,
-  Trash2
+  Trash2,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react';
 import { playTapSound, playLevelUpSound, playSuccessSound } from './utils/audio';
 import { motion, AnimatePresence } from 'motion/react';
@@ -168,7 +170,6 @@ export default function App() {
     } catch (e) {}
     return false;
   });
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [activeTab, setActiveTab] = useState<'inicio' | 'comunidade' | 'missoes' | 'artes'>('inicio');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isAuthInitializing, setIsAuthInitializing] = useState(true);
@@ -241,7 +242,13 @@ export default function App() {
         const segments = window.location.pathname.split('/');
         const base = segments[1]; // E.g., repo name
         
-        if (path.toLowerCase().includes('inscric') || path.toLowerCase().includes('inscricao')) {
+        if (path.toLowerCase().includes('admin')) {
+          if (base && base !== 'admin' && base !== 'Admin') {
+            targetPath = `/${base}/admin/${hashSuffix}`;
+          } else {
+            targetPath = `/admin/${hashSuffix}`;
+          }
+        } else if (path.toLowerCase().includes('inscric') || path.toLowerCase().includes('inscricao')) {
           // Use the replicated directory that contains index.html
           if (base && base !== 'inscricoes' && base !== 'Inscricoes' && base !== 'Inscrições') {
             targetPath = `/${base}/inscricoes/${hashSuffix}`;
@@ -250,7 +257,7 @@ export default function App() {
           }
         } else {
           // Back to main index
-          if (base && base !== 'inscricoes' && base !== 'Inscricoes' && base !== 'Inscrições') {
+          if (base && base !== 'inscricoes' && base !== 'Inscricoes' && base !== 'Inscrições' && base !== 'admin' && base !== 'Admin') {
             targetPath = `/${base}/${hashSuffix}`;
           } else {
             targetPath = `/${hashSuffix}`;
@@ -258,7 +265,9 @@ export default function App() {
         }
       } else {
         // Standard environments
-        if (path.toLowerCase().includes('inscric') || path.toLowerCase().includes('inscricao')) {
+        if (path.toLowerCase().includes('admin')) {
+          targetPath = `/admin${hashSuffix}`;
+        } else if (path.toLowerCase().includes('inscric') || path.toLowerCase().includes('inscricao')) {
           targetPath = `/inscricoes/${hashSuffix}`;
         } else {
           targetPath = `/${hashSuffix}`;
@@ -280,6 +289,17 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const isAdminRoute = currentPath.toLowerCase().includes('/admin') || 
+                        currentPath.toLowerCase().includes('admin');
+  const showAdminPanel = isAdminRoute;
+  const setShowAdminPanel = (show: boolean) => {
+    if (show) {
+      navigateTo('/admin');
+    } else {
+      navigateTo('/');
     }
   };
 
@@ -359,7 +379,9 @@ export default function App() {
 
   useEffect(() => {
     try {
-      if (isApplicationsRoute) {
+      if (isAdminRoute) {
+        document.title = "PKXD Central - Painel Admin";
+      } else if (isApplicationsRoute) {
         document.title = "PKXD Central - Inscrições";
       } else {
         document.title = "PKXD Central";
@@ -367,7 +389,7 @@ export default function App() {
     } catch (e) {
       console.warn(e);
     }
-  }, [isApplicationsRoute]);
+  }, [isAdminRoute, isApplicationsRoute]);
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
@@ -380,6 +402,36 @@ export default function App() {
   const [isDelayed, setIsDelayed] = useState(false);
   const [delayMessage, setDelayMessage] = useState('');
   const [notificationList, setNotificationList] = useState<AppNotification[]>([]);
+  const [notificationReactions, setNotificationReactions] = useState<Record<string, 'like' | 'dislike'>>(() => {
+    try {
+      const saved = localStorage.getItem('pkxd_notif_reactions');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  const handleNotificationReaction = (notifId: string, type: 'like' | 'dislike') => {
+    triggerAudio('tap');
+    setNotificationReactions(prev => {
+      const current = prev[notifId];
+      let updated: Record<string, 'like' | 'dislike'>;
+      if (current === type) {
+        // undo reaction
+        const copy = { ...prev };
+        delete copy[notifId];
+        updated = copy;
+      } else {
+        updated = { ...prev, [notifId]: type };
+      }
+      try {
+        localStorage.setItem('pkxd_notif_reactions', JSON.stringify(updated));
+      } catch (e) {
+        console.warn(e);
+      }
+      return updated;
+    });
+  };
   const [isNotifOverlayOpen, setIsNotifOverlayOpen] = useState(false);
   const [hasNotificationPermission, setHasNotificationPermission] = useState(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -2205,7 +2257,7 @@ export default function App() {
       </nav>
 
       {/* Hero Header Area */}
-      {!isApplicationsRoute && (
+      {!isApplicationsRoute && !isAdminRoute && (
         <header id="masthead-hero" className="relative overflow-hidden py-12 md:py-16 px-4 bg-gradient-to-b from-purple-800/45 via-slate-950/80 to-slate-950 select-none">
           
           {/* Neon Glow spots */}
@@ -2254,20 +2306,46 @@ export default function App() {
       <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 pt-4">
         
         {/* Apple Style Premium Profile Header */}
-        <AppleProfileHeader
-          user={user}
-          fanLevel={fanLevel}
-          fanXP={fanXP}
-          soundEnabled={soundEnabled}
-          triggerAudio={triggerAudio}
-          showAdminPanel={showAdminPanel}
-          setShowAdminPanel={setShowAdminPanel}
-          isAdmin={isAdmin}
-        />
+        {!isAdminRoute && (
+          <AppleProfileHeader
+            user={user}
+            fanLevel={fanLevel}
+            fanXP={fanXP}
+            soundEnabled={soundEnabled}
+            triggerAudio={triggerAudio}
+            showAdminPanel={showAdminPanel}
+            setShowAdminPanel={setShowAdminPanel}
+            isAdmin={isAdmin}
+          />
+        )}
         
         {/* Admin Panel / Google Login Area */}
         {showAdminPanel && (
           <div className="animate-scale-up duration-150" id="admin-panel">
+            {isAdminRoute && (
+              <div className="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-purple-950/45 p-6 rounded-3xl border-2 border-purple-500/40 shadow-xl">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1.5 bg-yellow-400/10 border border-yellow-400/30 rounded-xl">
+                      <Settings className="w-5 h-5 text-yellow-400 animate-spin-slow" />
+                    </span>
+                    Painel Administrativo PKXD Central
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Espaço reservado para gerenciamento oficial de novidades, spoilers, teorias e fã-clube.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    triggerAudio('tap');
+                    navigateTo('/');
+                  }}
+                  className="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:brightness-110 active:scale-95 text-white font-sans font-black text-[11px] uppercase tracking-wider rounded-2xl shadow-lg transition-all cursor-pointer border border-pink-400 flex items-center gap-1.5"
+                >
+                  ← Voltar ao Hub
+                </button>
+              </div>
+            )}
             {isAdmin ? (
               <div className="space-y-4 text-left">
                 {/* Admin Welcome Badge */}
@@ -2575,7 +2653,7 @@ export default function App() {
           </div>
         )}
 
-        {isApplicationsRoute ? (
+        {isAdminRoute ? null : isApplicationsRoute ? (
           <ApplicationsSection 
             onBackToHub={() => navigateTo('/Hub/')}
             onAddXP={handleAddFanXP}
@@ -3395,6 +3473,14 @@ export default function App() {
                     icon = '⏰';
                   }
 
+                  const userReaction = notificationReactions[notif.id];
+                  // Stable pseudo-random base counts so cards have realistic numbers of likes/dislikes
+                  const baseLikes = (notif.createdAt % 29) + 8;
+                  const baseDislikes = (notif.createdAt % 7);
+                  
+                  const displayLikes = baseLikes + (userReaction === 'like' ? 1 : 0);
+                  const displayDislikes = baseDislikes + (userReaction === 'dislike' ? 1 : 0);
+
                   return (
                     <div 
                       key={notif.id}
@@ -3426,9 +3512,40 @@ export default function App() {
                         <p className="font-sans text-xs text-gray-300 leading-relaxed">
                           {notif.body}
                         </p>
-                        <span className="block font-mono text-[9px] text-gray-500">
-                          Enviado em: {new Date(notif.createdAt).toLocaleString('pt-BR')}
-                        </span>
+                        <div className="flex items-center justify-between gap-4 pt-2.5 border-t border-white/5 mt-2.5">
+                          <span className="block font-mono text-[9px] text-gray-500">
+                            Enviado em: {new Date(notif.createdAt).toLocaleString('pt-BR')}
+                          </span>
+                          
+                          {/* Interações de Gostei/Não Gostei */}
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleNotificationReaction(notif.id, 'like')}
+                              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer select-none active:scale-95 ${
+                                userReaction === 'like'
+                                  ? 'bg-emerald-500/20 text-emerald-350 border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                                  : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'
+                              }`}
+                              title="Gostei"
+                            >
+                              <ThumbsUp className={`w-3 h-3 ${userReaction === 'like' ? 'fill-emerald-350' : ''}`} />
+                              <span>{displayLikes}</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleNotificationReaction(notif.id, 'dislike')}
+                              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer select-none active:scale-95 ${
+                                userReaction === 'dislike'
+                                  ? 'bg-rose-500/20 text-rose-350 border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
+                                  : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'
+                              }`}
+                              title="Não gostei"
+                            >
+                              <ThumbsDown className={`w-3 h-3 ${userReaction === 'dislike' ? 'fill-rose-350' : ''}`} />
+                              <span>{displayDislikes}</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
