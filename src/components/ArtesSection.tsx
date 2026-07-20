@@ -133,9 +133,11 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
 
         const ctx = canvas.getContext('2d');
         if (ctx) {
+          // Clear rect to ensure transparency is preserved
+          ctx.clearRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
-          // High efficiency compressed JPEG representation (~60KB to 150KB, fully safe for Firestore)
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+          // Export as PNG to preserve transparent background perfectly
+          const compressedBase64 = canvas.toDataURL('image/png');
           setNewImgUrl(compressedBase64);
           if (!newDownloadUrl) {
             setNewDownloadUrl(compressedBase64);
@@ -265,6 +267,63 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
     } catch (err) {
       console.error("Erro ao remover arte:", err);
       showToast("❌ Erro ao excluir arte", "info");
+    }
+  };
+
+  // Safe high-performance download handler that prevents browser tabs/Chrome from closing
+  const handleDownload = (url: string, title: string) => {
+    triggerAudio('tap');
+    if (!url) return;
+
+    // Build standard high-quality file name
+    const safeTitle = title.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+      .replace(/[^a-z0-9]+/g, '_')                     // replace special chars with underscore
+      .replace(/^_+|_+$/g, '');                        // trim underscores
+    const filename = `${safeTitle || 'arte'}_pkxd.png`;
+
+    try {
+      if (url.startsWith('data:')) {
+        // Safe base64 download directly on client-side (does not open new tab, prevents crash)
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast("📥 Download iniciado com sucesso!", "success");
+      } else {
+        // Standard URL download. Try blob download to trigger native save as, with CORS fallback
+        fetch(url, { mode: 'cors' })
+          .then(res => {
+            if (!res.ok) throw new Error("Network error");
+            return res.blob();
+          })
+          .then(blob => {
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            showToast("📥 Download concluído!", "success");
+          })
+          .catch(() => {
+            // CORS blocked or fetch error fallback: Open in clean window tab safely without crashes
+            const win = window.open(url, '_blank');
+            if (win) {
+              showToast("🔗 Arte aberta em nova aba para download!", "success");
+            } else {
+              showToast("⚠️ Bloqueador de popups impediu abertura da aba.", "info");
+            }
+          });
+      }
+    } catch (error) {
+      console.error("Erro no download:", error);
+      // Fallback
+      window.open(url, '_blank');
     }
   };
 
@@ -429,11 +488,28 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
               )}
 
               {/* Image Preview Container */}
-              <div className="relative aspect-video w-full bg-neutral-950 overflow-hidden flex items-center justify-center group-hover:brightness-105 transition-all">
+              <div 
+                className="relative aspect-video w-full overflow-hidden flex items-center justify-center group-hover:brightness-105 transition-all border-b border-white/5"
+                style={{
+                  backgroundColor: '#0c0c0e',
+                  backgroundImage: `
+                    linear-gradient(45deg, #141416 25%, transparent 25%), 
+                    linear-gradient(-45deg, #141416 25%, transparent 25%), 
+                    linear-gradient(45deg, transparent 75%, #141416 75%), 
+                    linear-gradient(-45deg, transparent 75%, #141416 75%)
+                  `,
+                  backgroundSize: '16px 16px',
+                  backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px'
+                }}
+              >
                 <img 
                   src={art.imageUrl} 
                   alt={art.title} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className={`transition-transform duration-300 group-hover:scale-105 ${
+                    ["renders", "logos", "overlays"].includes(art.category.toLowerCase())
+                      ? 'w-auto h-full max-h-full object-contain p-2.5'
+                      : 'w-full h-full object-cover'
+                  }`}
                   onError={(e) => {
                     (e.target as any).src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=400";
                   }}
@@ -460,16 +536,13 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
                 {/* Bottom interactive buttons */}
                 <div className="flex gap-2 pt-1 border-t border-white/5">
                   {/* Download button */}
-                  <a 
-                    href={art.downloadUrl || art.imageUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => triggerAudio('tap')}
+                  <button
+                    onClick={() => handleDownload(art.downloadUrl || art.imageUrl, art.title)}
                     className="flex-1 py-1.5 px-3 bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 hover:border-pink-500/50 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-pink-300 hover:text-white text-center flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download</span>
-                  </a>
+                  </button>
 
                   {/* Copy Link Button */}
                   <button
@@ -508,7 +581,7 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
       {/* Cute dialog modal for Adding assets */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-zinc-900 border border-pink-500/30 rounded-3xl w-full max-w-md p-6 relative shadow-2xl animate-scale-up">
+          <div className="bg-zinc-900 border border-pink-500/30 rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col relative shadow-2xl animate-scale-up overflow-hidden">
             
             {/* Close button */}
             <button
@@ -516,195 +589,213 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
                 triggerAudio('tap');
                 setShowAddModal(false);
               }}
-              className="absolute top-4 right-4 p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-all cursor-pointer"
+              className="absolute top-4 right-4 z-10 p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-all cursor-pointer bg-zinc-900/60"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-2 mb-4">
+            {/* Header - Fixed */}
+            <div className="p-5 pb-3 border-b border-white/5 flex items-center gap-2">
               <div className="p-1.5 bg-pink-500/15 rounded-xl border border-pink-500/20">
                 <ImageIcon className="w-5 h-5 text-pink-400" />
               </div>
-              <h3 className="text-md font-black font-sans text-white uppercase tracking-wider">
+              <h3 className="text-sm font-black font-sans text-white uppercase tracking-wider">
                 Nova Arte do Canal 🎨
               </h3>
             </div>
 
-            <form onSubmit={handleAddArt} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase text-neutral-400">Título da Arte</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Fundo de Nuvem Lilás"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase text-neutral-400">Descrição</label>
-                <textarea
-                  rows={2}
-                  placeholder="Explique do que se trata a imagem e onde os youtubers podem usar..."
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500"
-                />
-              </div>
-
-              {/* Image Input choice */}
-              <div className="space-y-2 border border-white/5 bg-black/20 p-3 rounded-2xl text-left">
-                <label className="block text-[10px] font-extrabold uppercase text-neutral-400">
-                  Imagem da Arte 🖼️
-                </label>
-                
-                <div className="space-y-3">
-                  {/* Upload from cellphone button */}
-                  <div className="flex items-center gap-2">
-                    <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 cursor-pointer hover:bg-white/5 hover:border-pink-500/50 transition-all ${newImgUrl.startsWith('data:') ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-white/10'}`}>
-                      <span className={`text-[11px] font-black uppercase text-center mt-0.5 ${newImgUrl.startsWith('data:') ? 'text-emerald-400' : 'text-pink-400'}`}>
-                        {newImgUrl.startsWith('data:') ? '✓ Imagem Selecionada!' : '📱 Selecionar do Celular / Upar Foto'}
-                      </span>
-                      <span className="text-[9px] text-gray-400 text-center mt-0.5">
-                        {newImgUrl.startsWith('data:') ? 'Foto do celular carregada!' : 'Toque para escolher da galeria'}
-                      </span>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleImageUpload} 
-                        className="hidden" 
-                      />
-                    </label>
-                  </div>
-
-                  {/* Loading spinner */}
-                  {uploadingImage && (
-                    <div className="flex items-center justify-center gap-2 py-1">
-                      <div className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-[10px] font-mono text-pink-400 uppercase tracking-widest animate-pulse">Processando foto...</span>
-                    </div>
-                  )}
-
-                  {/* Preview Thumbnail if selected */}
-                  {newImgUrl && (
-                    <div className="relative rounded-xl overflow-hidden bg-black/40 border border-white/5 aspect-video flex items-center justify-center p-1">
-                      <img 
-                        src={newImgUrl} 
-                        alt="Preview" 
-                        className="max-h-24 rounded-lg object-contain"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerAudio('tap');
-                          setNewImgUrl("");
-                          if (newDownloadUrl.startsWith('data:')) {
-                            setNewDownloadUrl("");
-                          }
-                        }}
-                        className="absolute top-2 right-2 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-all cursor-pointer shadow-md"
-                        title="Remover Imagem"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Or Manual URL input toggle */}
-                  <div className="relative pt-1">
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <span className="text-[9px] text-zinc-500 font-bold uppercase">Ou usar link de internet (URL)</span>
-                      {newImgUrl.startsWith('data:') && (
-                        <span className="text-[9px] text-emerald-400 font-bold uppercase">✓ Usando arquivo local</span>
-                      )}
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="https://exemplo.com/imagem.png"
-                      value={newImgUrl.startsWith('data:') ? '[Imagem do Aparelho]' : newImgUrl}
-                      disabled={newImgUrl.startsWith('data:')}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val !== '[Imagem do Aparelho]') {
-                          setNewImgUrl(val);
-                        }
-                      }}
-                      className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-semibold disabled:opacity-45"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1 text-left">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-extrabold uppercase text-neutral-400">Link de Download Oficial (Opcional)</label>
-                  <span className="text-[8px] text-zinc-500 font-bold uppercase">Deixe em branco para usar a mesma imagem</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="https://exemplo.com/imagem-hd.png"
-                  value={newDownloadUrl.startsWith('data:') ? '[Imagem do Aparelho]' : newDownloadUrl}
-                  disabled={newDownloadUrl.startsWith('data:')}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val !== '[Imagem do Aparelho]') {
-                      setNewDownloadUrl(val);
-                    }
-                  }}
-                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 disabled:opacity-45"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase text-neutral-400">Categoria</label>
-                <select
-                  value={newCategory}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setNewCategory(val);
-                    if (val === "CUSTOM") {
-                      setIsCustomCat(true);
-                    } else {
-                      setIsCustomCat(false);
-                    }
-                  }}
-                  className="w-full px-3 py-1.5 bg-neutral-800 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold cursor-pointer"
-                >
-                  <option value="Renders">Renders (Personagens)</option>
-                  <option value="Logos">Logos</option>
-                  <option value="Fundos">Fundos</option>
-                  <option value="Overlays">Overlays / Borda de Cam</option>
-                  <option value="Outros">Outros</option>
-                  <option value="CUSTOM">➕ Criar Nova Categoria...</option>
-                </select>
-              </div>
-
-              {isCustomCat && (
-                <div className="space-y-1 animate-scale-up">
-                  <label className="text-[10px] font-extrabold uppercase text-pink-400">Nome da Nova Categoria</label>
+            {/* Scrollable inputs wrapper inside the form */}
+            <form onSubmit={handleAddArt} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-4 overflow-y-auto max-h-[55vh] scrollbar-thin text-left">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-extrabold uppercase text-neutral-400">Título da Arte</label>
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Miniaturas, Divisórias..."
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-black/40 border border-pink-500/30 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold"
+                    placeholder="Ex: Fundo de Nuvem Lilás"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold"
                   />
                 </div>
-              )}
 
-              <div className="text-[10px] text-zinc-400 bg-black/30 p-2.5 rounded-xl border border-white/5 leading-relaxed space-y-1">
-                <p className="font-extrabold text-pink-400 uppercase tracking-wider">💡 Dica de Upload de Galeria:</p>
-                <p>Você pode enviar qualquer imagem de sua galeria/computador para sites gratuitos como <a href="https://postimages.org/" target="_blank" rel="noreferrer" className="text-pink-400 underline">Postimages</a>, <a href="https://imgur.com/" target="_blank" rel="noreferrer" className="text-pink-400 underline">Imgur</a> ou pelo Discord, e colar o <strong>link direto da imagem</strong> (terminando em .png, .jpg) nos campos de links acima!</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-extrabold uppercase text-neutral-400">Descrição</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Explique do que se trata a imagem e onde os youtubers podem usar..."
+                    value={newDesc}
+                    onChange={(e) => setNewDesc(e.target.value)}
+                    className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500"
+                  />
+                </div>
+
+                {/* Image Input choice */}
+                <div className="space-y-2 border border-white/5 bg-black/20 p-3 rounded-2xl text-left">
+                  <label className="block text-[10px] font-extrabold uppercase text-neutral-400">
+                    Imagem da Arte 🖼️
+                  </label>
+                  
+                  <div className="space-y-3">
+                    {/* Upload from cellphone button */}
+                    <div className="flex items-center gap-2">
+                      <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 cursor-pointer hover:bg-white/5 hover:border-pink-500/50 transition-all ${newImgUrl.startsWith('data:') ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-white/10'}`}>
+                        <span className={`text-[11px] font-black uppercase text-center mt-0.5 ${newImgUrl.startsWith('data:') ? 'text-emerald-400' : 'text-pink-400'}`}>
+                          {newImgUrl.startsWith('data:') ? '✓ Imagem Selecionada!' : '📱 Selecionar do Celular / Upar Foto'}
+                        </span>
+                        <span className="text-[9px] text-gray-400 text-center mt-0.5">
+                          {newImgUrl.startsWith('data:') ? 'Foto do celular carregada!' : 'Toque para escolher da galeria'}
+                        </span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleImageUpload} 
+                          className="hidden" 
+                        />
+                      </label>
+                    </div>
+
+                    {/* Loading spinner */}
+                    {uploadingImage && (
+                      <div className="flex items-center justify-center gap-2 py-1">
+                        <div className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-[10px] font-mono text-pink-400 uppercase tracking-widest animate-pulse">Processando foto...</span>
+                      </div>
+                    )}
+
+                    {/* Preview Thumbnail if selected */}
+                    {newImgUrl && (
+                      <div 
+                        className="relative rounded-2xl overflow-hidden border border-white/10 aspect-video flex items-center justify-center p-3 shadow-inner"
+                        style={{
+                          backgroundColor: '#0c0c0e',
+                          backgroundImage: `
+                            linear-gradient(45deg, #141416 25%, transparent 25%), 
+                            linear-gradient(-45deg, #141416 25%, transparent 25%), 
+                            linear-gradient(45deg, transparent 75%, #141416 75%), 
+                            linear-gradient(-45deg, transparent 75%, #141416 75%)
+                          `,
+                          backgroundSize: '14px 14px',
+                          backgroundPosition: '0 0, 0 7px, 7px -7px, -7px 0px'
+                        }}
+                      >
+                        <img 
+                          src={newImgUrl} 
+                          alt="Preview" 
+                          className="max-h-24 rounded-lg object-contain"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerAudio('tap');
+                            setNewImgUrl("");
+                            if (newDownloadUrl.startsWith('data:')) {
+                              setNewDownloadUrl("");
+                            }
+                          }}
+                          className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full transition-all cursor-pointer shadow-md"
+                          title="Remover Imagem"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Or Manual URL input toggle */}
+                    <div className="relative pt-1">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase">Ou usar link de internet (URL)</span>
+                        {newImgUrl.startsWith('data:') && (
+                          <span className="text-[9px] text-emerald-400 font-bold uppercase">✓ Usando arquivo local</span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="https://exemplo.com/imagem.png"
+                        value={newImgUrl.startsWith('data:') ? '[Imagem do Aparelho]' : newImgUrl}
+                        disabled={newImgUrl.startsWith('data:')}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val !== '[Imagem do Aparelho]') {
+                            setNewImgUrl(val);
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-semibold disabled:opacity-45"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1 text-left">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-extrabold uppercase text-neutral-400">Link de Download Oficial (Opcional)</label>
+                    <span className="text-[8px] text-zinc-500 font-bold uppercase">Deixe em branco para usar a mesma imagem</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="https://exemplo.com/imagem-hd.png"
+                    value={newDownloadUrl.startsWith('data:') ? '[Imagem do Aparelho]' : newDownloadUrl}
+                    disabled={newDownloadUrl.startsWith('data:')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val !== '[Imagem do Aparelho]') {
+                        setNewDownloadUrl(val);
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 disabled:opacity-45"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-extrabold uppercase text-neutral-400">Categoria</label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNewCategory(val);
+                      if (val === "CUSTOM") {
+                        setIsCustomCat(true);
+                      } else {
+                        setIsCustomCat(false);
+                      }
+                    }}
+                    className="w-full px-3 py-1.5 bg-neutral-800 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold cursor-pointer"
+                  >
+                    <option value="Renders">Renders (Personagens)</option>
+                    <option value="Logos">Logos</option>
+                    <option value="Fundos">Fundos</option>
+                    <option value="Overlays">Overlays / Borda de Cam</option>
+                    <option value="Outros">Outros</option>
+                    <option value="CUSTOM">➕ Criar Nova Categoria...</option>
+                  </select>
+                </div>
+
+                {isCustomCat && (
+                  <div className="space-y-1 animate-scale-up">
+                    <label className="text-[10px] font-extrabold uppercase text-pink-400">Nome da Nova Categoria</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Miniaturas, Divisórias..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      className="w-full px-3 py-2 bg-black/40 border border-pink-500/30 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500 font-bold"
+                    />
+                  </div>
+                )}
+
+                <div className="text-[10px] text-zinc-400 bg-black/30 p-2.5 rounded-xl border border-white/5 leading-relaxed space-y-1">
+                  <p className="font-extrabold text-pink-400 uppercase tracking-wider">💡 Dica de Upload de Galeria:</p>
+                  <p>Você pode enviar qualquer imagem de sua galeria/computador para sites gratuitos como <a href="https://postimages.org/" target="_blank" rel="noreferrer" className="text-pink-400 underline">Postimages</a>, <a href="https://imgur.com/" target="_blank" rel="noreferrer" className="text-pink-400 underline">Imgur</a> ou pelo Discord, e colar o <strong>link direto da imagem</strong> nos campos acima!</p>
+                </div>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              {/* Fixed Footer */}
+              <div className="p-5 border-t border-white/5 bg-zinc-950/60 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-2 bg-neutral-800 text-neutral-300 font-sans text-xs font-bold uppercase rounded-xl hover:bg-neutral-700 transition-all cursor-pointer"
+                  className="flex-1 py-2 bg-neutral-800 hover:bg-neutral-750 text-neutral-300 font-sans text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
