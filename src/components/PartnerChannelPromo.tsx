@@ -137,7 +137,7 @@ export default function PartnerChannelPromo({ onAddXP }: PartnerChannelPromoProp
         <div className="flex-1 space-y-5 text-center md:text-left">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-400/10 border border-yellow-400/40 text-yellow-400 font-mono text-[10px] font-bold rounded-full uppercase tracking-wider mb-2">
-              <Star className="w-3.5 h-3.5 fill-yellow-400/20" /> Parceria Oficial de Elite
+              <Star className="w-3.5 h-3.5 fill-yellow-400/20" /> Parceiro Oficial PKXD Central
             </div>
             
             <h3 className="font-sans font-black text-2xl sm:text-3xl leading-tight tracking-wide uppercase text-yellow-300">
