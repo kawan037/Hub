@@ -435,6 +435,14 @@ export default function App() {
     });
   };
   const [isNotifOverlayOpen, setIsNotifOverlayOpen] = useState(false);
+  const [seenNotifIds, setSeenNotifIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('seen_notification_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [hasNotificationPermission, setHasNotificationPermission] = useState(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       return Notification.permission === 'granted';
@@ -2053,6 +2061,9 @@ export default function App() {
     }
   };
 
+  const unreadNotifications = notificationList.filter(n => !seenNotifIds.includes(n.id));
+  const unreadCount = unreadNotifications.length;
+
   return (
     <div id="pkxd-app-root" className="theme-dark min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-yellow-400 selection:text-black pb-16 relative overflow-x-hidden bg-pkxd-texture">
       
@@ -2388,15 +2399,27 @@ export default function App() {
               type="button"
               onClick={() => {
                 triggerAudio('tap');
-                setIsNotifOverlayOpen(!isNotifOverlayOpen);
+                const nextState = !isNotifOverlayOpen;
+                setIsNotifOverlayOpen(nextState);
+                if (nextState) {
+                  // Mark all current notifications as seen!
+                  const currentIds = notificationList.map(n => n.id);
+                  setSeenNotifIds(prev => {
+                    const unique = Array.from(new Set([...prev, ...currentIds]));
+                    try {
+                      localStorage.setItem('seen_notification_ids', JSON.stringify(unique));
+                    } catch (e) {}
+                    return unique;
+                  });
+                }
               }}
               className="bg-purple-800 border-2 border-purple-500/50 p-2.5 px-3 rounded-2xl text-yellow-300 hover:bg-purple-900 transition-all cursor-pointer relative flex items-center gap-1.5 text-[11px] font-extrabold shadow-md"
               title="Central de Notificações Recentes"
             >
               <BellRing className="w-3.5 h-3.5 animate-swing" />
-              {notificationList.length > 0 && (
+              {unreadCount > 0 && (
                 <span className="bg-pink-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full border border-purple-950">
-                  {notificationList.length}
+                  {unreadCount}
                 </span>
               )}
             </button>
@@ -3603,45 +3626,6 @@ export default function App() {
                   🔔 ATIVAR ALERTAS
                 </button>
               )}
-            </div>
-
-            {/* Google Native Notifications explanation panel */}
-            <div className="mb-6 p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/25 space-y-3 text-left">
-              <h5 className="font-sans font-black text-xs uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
-                <span className="animate-pulse">📢</span>
-                <span>Sobre as notificações não chegarem como notificação nativa do Google:</span>
-              </h5>
-              
-              {/* IMPORTANT IFRAME PREVIEW NOTIFICATION ALERT */}
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl space-y-1.5 text-xs">
-                <p className="font-sans font-black uppercase flex items-center gap-1.5 tracking-wide text-yellow-400">
-                  <span>⚠️</span> ATENÇÃO: AMBIENTE DE VISUALIZAÇÃO DO MODELO
-                </p>
-                <p className="leading-relaxed font-sans text-[11px] text-gray-300">
-                  Como você está acessando pelo visualizador (iframe) do AI Studio, o navegador <strong>bloqueia</strong> o registro de Service Workers por segurança. Para poder registrar e receber notificações push nativas no seu celular ou PC, você <strong>DEVE abrir o site em uma nova aba</strong> (clique no botão <span className="text-amber-400 font-bold">"Open in a new tab" / "Abrir em nova guia"</span> no topo direito da tela).
-                </p>
-              </div>
-
-              <p className="text-[11px] text-gray-300 leading-relaxed font-sans">
-                Atualmente, as notificações do site funcionam em tempo real por um canal de escuta do Firebase (Firestore). Elas atualizam o sininho instantaneamente e mostram alertas na tela do usuário enquanto ele está navegando no site.
-              </p>
-              
-              <div className="space-y-2 pt-2 border-t border-cyan-500/10">
-                <p className="font-sans font-black text-[10px] uppercase tracking-wide text-yellow-400">
-                  🔔 Para que cheguem de forma nativa do Google (com o site fechado e o celular no bolso):
-                </p>
-                <ul className="list-disc pl-4 text-[11px] text-gray-300 space-y-1.5 font-sans leading-relaxed">
-                  <li>
-                    <strong className="text-white">Ative as Permissões no Aparelho:</strong> Abra o site em uma aba cheia, clique no botão <strong className="text-pink-400">"ATIVAR ALERTAS"</strong> acima e selecione "Permitir" quando o navegador solicitar. Isso criará uma inscrição de Web Push segura no servidor!
-                  </li>
-                  <li>
-                    <strong className="text-white">Receba Mesmo Fechado:</strong> Com a permissão concedida, o celular receberá os alertas na tela de bloqueio e na barra de notificações nativa do Android/Google Chrome, mesmo com o navegador fechado!
-                  </li>
-                  <li>
-                    <strong className="text-white">Dica para iOS (iPhones):</strong> No Safari do iPhone, toque no ícone de compartilhar <strong className="text-cyan-300">📤</strong>, selecione <strong className="text-cyan-300">"Adicionar à Tela de Início"</strong>, abra o site por lá e clique no botão de alertas para ativar!
-                  </li>
-                </ul>
-              </div>
             </div>
 
             {/* Notification logs list block */}
