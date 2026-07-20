@@ -491,12 +491,12 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
               <div 
                 className="relative aspect-video w-full overflow-hidden flex items-center justify-center group-hover:brightness-105 transition-all border-b border-white/5"
                 style={{
-                  backgroundColor: '#0c0c0e',
+                  backgroundColor: '#27272a', // Zinc-800 checkerboard background to clearly show PNG transparency!
                   backgroundImage: `
-                    linear-gradient(45deg, #141416 25%, transparent 25%), 
-                    linear-gradient(-45deg, #141416 25%, transparent 25%), 
-                    linear-gradient(45deg, transparent 75%, #141416 75%), 
-                    linear-gradient(-45deg, transparent 75%, #141416 75%)
+                    linear-gradient(45deg, #3f3f46 25%, transparent 25%), 
+                    linear-gradient(-45deg, #3f3f46 25%, transparent 25%), 
+                    linear-gradient(45deg, transparent 75%, #3f3f46 75%), 
+                    linear-gradient(-45deg, transparent 75%, #3f3f46 75%)
                   `,
                   backgroundSize: '16px 16px',
                   backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px'
@@ -505,11 +505,7 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
                 <img 
                   src={art.imageUrl} 
                   alt={art.title} 
-                  className={`transition-transform duration-300 group-hover:scale-105 ${
-                    ["renders", "logos", "overlays"].includes(art.category.toLowerCase())
-                      ? 'w-auto h-full max-h-full object-contain p-2.5'
-                      : 'w-full h-full object-cover'
-                  }`}
+                  className="max-w-full max-h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
                     (e.target as any).src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=400";
                   }}
@@ -666,23 +662,23 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
                     {/* Preview Thumbnail if selected */}
                     {newImgUrl && (
                       <div 
-                        className="relative rounded-2xl overflow-hidden border border-white/10 aspect-video flex items-center justify-center p-3 shadow-inner"
+                        className="relative rounded-xl overflow-hidden border border-white/10 h-28 w-full max-w-[200px] mx-auto flex items-center justify-center p-2 shadow-inner"
                         style={{
-                          backgroundColor: '#0c0c0e',
+                          backgroundColor: '#27272a',
                           backgroundImage: `
-                            linear-gradient(45deg, #141416 25%, transparent 25%), 
-                            linear-gradient(-45deg, #141416 25%, transparent 25%), 
-                            linear-gradient(45deg, transparent 75%, #141416 75%), 
-                            linear-gradient(-45deg, transparent 75%, #141416 75%)
+                            linear-gradient(45deg, #3f3f46 25%, transparent 25%), 
+                            linear-gradient(-45deg, #3f3f46 25%, transparent 25%), 
+                            linear-gradient(45deg, transparent 75%, #3f3f46 75%), 
+                            linear-gradient(-45deg, transparent 75%, #3f3f46 75%)
                           `,
-                          backgroundSize: '14px 14px',
-                          backgroundPosition: '0 0, 0 7px, 7px -7px, -7px 0px'
+                          backgroundSize: '12px 12px',
+                          backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0px'
                         }}
                       >
                         <img 
                           src={newImgUrl} 
                           alt="Preview" 
-                          className="max-h-24 rounded-lg object-contain"
+                          className="max-h-full max-w-full rounded-lg object-contain"
                         />
                         <button
                           type="button"
@@ -693,10 +689,10 @@ export default function ArtesSection({ isAdmin, triggerAudio, soundEnabled }: Ar
                               setNewDownloadUrl("");
                             }
                           }}
-                          className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full transition-all cursor-pointer shadow-md"
+                          className="absolute top-1 right-1 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-all cursor-pointer shadow-md z-10"
                           title="Remover Imagem"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-2.5 h-2.5" />
                         </button>
                       </div>
                     )}
