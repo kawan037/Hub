@@ -32,6 +32,20 @@ interface FanLevelSectionProps {
   isAdmin?: boolean;
   setFanLevel?: (level: number) => void;
   setFanXP?: (xp: number) => void;
+  pendingEmailVerification?: {
+    email: string;
+    pass: string;
+    nickname: string;
+    code: string;
+    createdAt: number;
+  } | null;
+  verificationCodeInput?: string;
+  setVerificationCodeInput?: (code: string) => void;
+  onConfirmEmailCode?: () => void;
+  onCancelVerification?: () => void;
+  resendCooldown?: number;
+  onResendCode?: () => void;
+  isAuthenticating?: boolean;
 }
 
 interface RankedPlayer {
@@ -62,7 +76,15 @@ export default function FanLevelSection({
   authError: outerAuthError,
   isAdmin = false,
   setFanLevel,
-  setFanXP
+  setFanXP,
+  pendingEmailVerification,
+  verificationCodeInput,
+  setVerificationCodeInput,
+  onConfirmEmailCode,
+  onCancelVerification,
+  resendCooldown,
+  onResendCode,
+  isAuthenticating
 }: FanLevelSectionProps) {
 
   // Daily claim state
@@ -883,182 +905,262 @@ export default function FanLevelSection({
               </div>
             </div>
 
-            {/* Right Column: Email / Password login */}
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (soundEnabled) playTapSound();
-                if (!emailForm || !passwordForm) {
-                  setAuthError('Preencha os campos de e-mail e senha!');
-                  return;
-                }
-                setAuthError(null);
-                if (authTab === 'register') {
-                  // Password complexity validation
-                  if (passwordForm.length < 8) {
-                    setAuthError('A senha cadastrada precisa de no mínimo 8 caracteres para ser segura!');
-                    return;
-                  }
-                  if (!/\d/.test(passwordForm)) {
-                    setAuthError('Sua senha é muito fácil! Ela deve conter pelo menos um número.');
-                    return;
-                  }
-                  if (!/[A-Za-z]/.test(passwordForm)) {
-                    setAuthError('Sua senha é muito fácil! Ela deve conter letras e números.');
-                    return;
-                  }
-                  const simplePasswords = ['123456', '12345678', 'senha123', 'admin123', 'pkxd123', 'pkxd2026', 'password'];
-                  if (simplePasswords.some(sw => passwordForm.toLowerCase().includes(sw))) {
-                    setAuthError('Esta senha é muito óbvia e vulnerável. Por favor, escolha outra combinação.');
-                    return;
-                  }
+            {/* Right Column: Email / Password login or Verification Code */}
+            {pendingEmailVerification ? (
+              <div className="bg-zinc-950/80 p-5 rounded-2xl border border-emerald-500/30 flex flex-col justify-between space-y-4">
+                <div className="space-y-3 text-left">
+                  <div className="bg-emerald-500/15 border border-emerald-500/30 p-3 rounded-xl space-y-1.5 text-xs text-emerald-200">
+                    <div className="font-bold uppercase tracking-wider text-[10px] text-emerald-400 flex items-center gap-1.5">
+                      <Mail className="w-4 h-4 text-emerald-400 animate-bounce" />
+                      <span>E-MAIL DE CONFIRMAÇÃO ENVIADO!</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-zinc-300 font-sans">
+                      Enviamos um código de verificação de 6 dígitos para o seu e-mail: <strong className="text-yellow-300 font-mono">{pendingEmailVerification.email}</strong>.
+                    </p>
+                    <div className="p-2 bg-black/40 rounded-xl border border-emerald-500/30 flex items-center justify-between text-[11px]">
+                      <span className="text-zinc-400 text-[10px] uppercase font-bold">Seu Código:</span>
+                      <span className="text-yellow-300 font-mono font-black text-sm tracking-widest">{pendingEmailVerification.code}</span>
+                    </div>
+                  </div>
 
-                  const pickNickname = nicknameForm.trim() || nickname;
-                  const clean = pickNickname.trim().replace(/\s+/g, '_');
-                  const isDuplicate = dbPlayers.some(
-                    p => p.id !== activePlayerId && p.name.trim().toLowerCase() === clean.trim().toLowerCase()
-                  );
-                  if (isDuplicate) {
-                    setAuthError(`O Apelido "${clean}" já está em uso! Escolha outro nome.`);
-                    return;
-                  }
+                  <div>
+                    <label className="block text-[10px] font-black text-pink-400 uppercase tracking-widest mb-1.5 ml-0.5">
+                      Digite o Código de 6 dígitos:
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      placeholder="000000"
+                      value={verificationCodeInput || ''}
+                      onChange={(e) => setVerificationCodeInput && setVerificationCodeInput(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center bg-zinc-950 border-2 border-pink-500/50 rounded-2xl py-3 text-2xl font-mono font-black tracking-[0.4em] text-yellow-300 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-500/50 transition-all"
+                    />
+                  </div>
 
-                  // Save Instagram state on register
-                  const cleanInsta = instagramForm.trim();
-                  localStorage.setItem('pkxd_user_instagram', cleanInsta);
-                  localStorage.setItem('pkxd_user_instagram_public', String(instagramPublicForm));
-                  setInstagram(cleanInsta);
-                  setInstagramPublic(instagramPublicForm);
+                  {(authError || outerAuthError) && (
+                    <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/10 p-2.5 rounded-xl whitespace-pre-line leading-relaxed font-sans">
+                      ⚠️ {authError || outerAuthError}
+                    </p>
+                  )}
+                </div>
 
-                  if (onEmailRegister) onEmailRegister(emailForm, passwordForm, clean);
-                } else {
-                  if (onEmailLogin) onEmailLogin(emailForm, passwordForm);
-                }
-              }}
-              className="bg-zinc-950/60 p-5 rounded-2xl border border-white/5 flex flex-col justify-between space-y-4"
-            >
-              <div className="space-y-3">
-                {/* Auth Mode Toggle */}
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="text-xs font-black text-violet-400 uppercase tracking-widest">
-                    Opção 2: E-MAIL E SENHA (100% GARANTIDO)
-                  </span>
-                  <div className="flex gap-1.5">
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (soundEnabled) playSuccessSound();
+                      if (onConfirmEmailCode) onConfirmEmailCode();
+                    }}
+                    disabled={isAuthenticating || (verificationCodeInput || '').length !== 6}
+                    className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700 disabled:opacity-50 text-white rounded-xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer shadow-lg"
+                  >
+                    {isAuthenticating ? 'Verificando Código... 🚀' : 'Confirmar Código e Ativar Conta! ⚡'}
+                  </button>
+
+                  <div className="flex flex-col gap-2 pt-1 text-center border-t border-white/5">
+                    <button
+                      type="button"
+                      disabled={resendCooldown ? resendCooldown > 0 : false}
+                      onClick={() => {
+                        if (soundEnabled) playTapSound();
+                        if (onResendCode) onResendCode();
+                      }}
+                      className="text-xs text-pink-400 hover:text-pink-300 font-bold uppercase tracking-wider disabled:opacity-40 cursor-pointer"
+                    >
+                      {resendCooldown && resendCooldown > 0 ? `Reenviar novo código em (${resendCooldown}s)...` : '🔄 Reenviar Código por E-mail'}
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
                         if (soundEnabled) playTapSound();
-                        setAuthTab('login');
-                        setAuthError(null);
+                        if (onCancelVerification) onCancelVerification();
                       }}
-                      className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                        authTab === 'login' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                      }`}
+                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
                     >
-                      Entrar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (soundEnabled) playSuccessSound();
-                        setAuthTab('register');
-                        setAuthError(null);
-                        setNicknameForm(nickname);
-                      }}
-                      className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                        authTab === 'register' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      Cadastrar
+                      ✏️ Voltar e alterar e-mail ou dados
                     </button>
                   </div>
                 </div>
+              </div>
+            ) : (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (soundEnabled) playTapSound();
+                  if (!emailForm || !passwordForm) {
+                    setAuthError('Preencha os campos de e-mail e senha!');
+                    return;
+                  }
+                  setAuthError(null);
+                  if (authTab === 'register') {
+                    // Password complexity validation
+                    if (passwordForm.length < 8) {
+                      setAuthError('A senha cadastrada precisa de no mínimo 8 caracteres para ser segura!');
+                      return;
+                    }
+                    if (!/\d/.test(passwordForm)) {
+                      setAuthError('Sua senha é muito fácil! Ela deve conter pelo menos um número.');
+                      return;
+                    }
+                    if (!/[A-Za-z]/.test(passwordForm)) {
+                      setAuthError('Sua senha é muito fácil! Ela deve conter letras e números.');
+                      return;
+                    }
+                    const simplePasswords = ['123456', '12345678', 'senha123', 'admin123', 'pkxd123', 'pkxd2026', 'password'];
+                    if (simplePasswords.some(sw => passwordForm.toLowerCase().includes(sw))) {
+                      setAuthError('Esta senha é muito óbvia e vulnerável. Por favor, escolha outra combinação.');
+                      return;
+                    }
 
-                {/* Form fields */}
-                <div className="space-y-2.5">
-                  <div>
-                    <input
-                      type="email"
-                      required
-                      placeholder="Seu e-mail (ex: fã@email.com)"
-                      value={emailForm}
-                      onChange={(e) => setEmailForm(e.target.value)}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-mono"
-                    />
-                  </div>
+                    const pickNickname = nicknameForm.trim() || nickname;
+                    const clean = pickNickname.trim().replace(/\s+/g, '_');
+                    const isDuplicate = dbPlayers.some(
+                      p => p.id !== activePlayerId && p.name.trim().toLowerCase() === clean.trim().toLowerCase()
+                    );
+                    if (isDuplicate) {
+                      setAuthError(`O Apelido "${clean}" já está em uso! Escolha outro nome.`);
+                      return;
+                    }
 
-                  <div>
-                    <input
-                      type="password"
-                      required
-                      minLength={8}
-                      placeholder="Sua senha (mínimo 8 dígitos com letras e nrs)"
-                      value={passwordForm}
-                      onChange={(e) => setPasswordForm(e.target.value)}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-mono"
-                    />
-                  </div>
+                    // Save Instagram state on register
+                    const cleanInsta = instagramForm.trim();
+                    localStorage.setItem('pkxd_user_instagram', cleanInsta);
+                    localStorage.setItem('pkxd_user_instagram_public', String(instagramPublicForm));
+                    setInstagram(cleanInsta);
+                    setInstagramPublic(instagramPublicForm);
 
-                  {authTab === 'register' && (
-                    <div className="space-y-2.5 pt-1">
-                      <div>
-                        <label className="block text-[10px] text-zinc-400 uppercase tracking-widest mb-1 pl-0.5 leading-none font-sans font-bold">
-                          Nickname Oficial no Site:
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Nome de Fã"
-                          value={nicknameForm}
-                          onChange={(e) => setNicknameForm(e.target.value)}
-                          className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-bold"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] text-zinc-400 uppercase tracking-widest mb-1 pl-0.5 leading-none font-sans font-bold">
-                          Seu Instagram (Link ou @user):
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="ex: @pkxd_explorer ou link"
-                          value={instagramForm}
-                          onChange={(e) => setInstagramForm(e.target.value)}
-                          className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-mono"
-                        />
-                      </div>
-
-                      <div className="pt-1 select-none">
-                        <label className="flex items-center gap-2 text-[10px] sm:text-xs text-zinc-300 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={instagramPublicForm}
-                            onChange={(e) => setInstagramPublicForm(e.target.checked)}
-                            className="rounded border-white/15 bg-zinc-900 text-indigo-500 focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span>Mostrar meu Instagram no Ranking Público</span>
-                        </label>
-                        <p className="text-[9px] text-zinc-500 leading-normal pl-5 mt-0.5">
-                          Se desativado, seu contato ficará seguro e só aparecerá para a Administração do fã-clube.
-                        </p>
-                      </div>
+                    if (onEmailRegister) onEmailRegister(emailForm, passwordForm, clean);
+                  } else {
+                    if (onEmailLogin) onEmailLogin(emailForm, passwordForm);
+                  }
+                }}
+                className="bg-zinc-950/60 p-5 rounded-2xl border border-white/5 flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  {/* Auth Mode Toggle */}
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-xs font-black text-violet-400 uppercase tracking-widest">
+                      Opção 2: E-MAIL E SENHA (100% GARANTIDO)
+                    </span>
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (soundEnabled) playTapSound();
+                          setAuthTab('login');
+                          setAuthError(null);
+                        }}
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                          authTab === 'login' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        Entrar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (soundEnabled) playSuccessSound();
+                          setAuthTab('register');
+                          setAuthError(null);
+                          setNicknameForm(nickname);
+                        }}
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                          authTab === 'register' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        Cadastrar
+                      </button>
                     </div>
+                  </div>
+
+                  {/* Form fields */}
+                  <div className="space-y-2.5">
+                    <div>
+                      <input
+                        type="email"
+                        required
+                        placeholder="Seu e-mail (ex: fã@email.com)"
+                        value={emailForm}
+                        onChange={(e) => setEmailForm(e.target.value)}
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        placeholder="Sua senha (mínimo 8 dígitos com letras e nrs)"
+                        value={passwordForm}
+                        onChange={(e) => setPasswordForm(e.target.value)}
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                      />
+                    </div>
+
+                    {authTab === 'register' && (
+                      <div className="space-y-2.5 pt-1">
+                        <div>
+                          <label className="block text-[10px] text-zinc-400 uppercase tracking-widest mb-1 pl-0.5 leading-none font-sans font-bold">
+                            Nickname Oficial no Site:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Nome de Fã"
+                            value={nicknameForm}
+                            onChange={(e) => setNicknameForm(e.target.value)}
+                            className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-bold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] text-zinc-400 uppercase tracking-widest mb-1 pl-0.5 leading-none font-sans font-bold">
+                            Seu Instagram (Link ou @user):
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="ex: @pkxd_explorer ou link"
+                            value={instagramForm}
+                            onChange={(e) => setInstagramForm(e.target.value)}
+                            className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-all font-mono"
+                          />
+                        </div>
+
+                        <div className="pt-1 select-none">
+                          <label className="flex items-center gap-2 text-[10px] sm:text-xs text-zinc-300 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={instagramPublicForm}
+                              onChange={(e) => setInstagramPublicForm(e.target.checked)}
+                              className="rounded border-white/15 bg-zinc-900 text-indigo-500 focus:ring-indigo-500 cursor-pointer"
+                            />
+                            <span>Mostrar meu Instagram no Ranking Público</span>
+                          </label>
+                          <p className="text-[9px] text-zinc-500 leading-normal pl-5 mt-0.5">
+                            Se desativado, seu contato ficará seguro e só aparecerá para a Administração do fã-clube.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {(authError || outerAuthError) && (
+                    <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/10 p-2.5 rounded-xl whitespace-pre-line leading-relaxed font-sans">
+                      ⚠️ {authError || outerAuthError}
+                    </p>
                   )}
                 </div>
 
-                {(authError || outerAuthError) && (
-                  <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/10 p-2.5 rounded-xl whitespace-pre-line leading-relaxed font-sans">
-                    ⚠️ {authError || outerAuthError}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 px-4 bg-zinc-800 hover:bg-violet-600 hover:text-white text-zinc-300 font-sans font-black text-xs uppercase tracking-wider rounded-xl cursor-pointer border border-zinc-750 hover:border-violet-500 transition-all flex items-center justify-center gap-1.5"
-              >
-                <span>{authTab === 'register' ? 'CRIAR MINHA CONTA DE FÃ 🚀' : 'ENTRAR NA CONTA E SINCRONIZAR 🔓'}</span>
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 bg-zinc-800 hover:bg-violet-600 hover:text-white text-zinc-300 font-sans font-black text-xs uppercase tracking-wider rounded-xl cursor-pointer border border-zinc-750 hover:border-violet-500 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>{authTab === 'register' ? 'CRIAR CONTA (ENVIAR CÓDIGO) 📩' : 'ENTRAR NA CONTA E SINCRONIZAR 🔓'}</span>
+                </button>
+              </form>
+            )}
 
           </div>
         </div>

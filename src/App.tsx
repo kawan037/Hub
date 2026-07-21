@@ -41,14 +41,16 @@ import {
   AlertTriangle,
   Trash2,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  Mail,
+  ShieldCheck
 } from 'lucide-react';
 import { playTapSound, playLevelUpSound, playSuccessSound } from './utils/audio';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Import Firebase config & helpers
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
-import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, User, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, User, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 
 export const maskEmail = (email?: string | null): string => {
@@ -183,6 +185,25 @@ export default function App() {
   const [modalPassword, setModalPassword] = useState('');
   const [modalNickname, setModalNickname] = useState('');
   const [modalAuthError, setModalAuthError] = useState<string | null>(null);
+
+  // Pending 6-digit email verification code state
+  const [pendingEmailVerification, setPendingEmailVerification] = useState<{
+    email: string;
+    pass: string;
+    nickname: string;
+    code: string;
+    createdAt: number;
+  } | null>(null);
+  const [verificationCodeInput, setVerificationCodeInput] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
 
   // Fallback passcode login states
   const [useBackupPasscode, setUseBackupPasscode] = useState(false);
@@ -1152,19 +1173,62 @@ export default function App() {
     }
   };
 
-  const handleEmailRegister = async (email: string, pass: string, nickname: string) => {
+  const handleInitiateEmailRegister = (email: string, pass: string, nickname: string) => {
+    setModalAuthError(null);
+    setGoogleAuthError(null);
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setPendingEmailVerification({
+      email: email.trim(),
+      pass: pass,
+      nickname: nickname.trim(),
+      code: generatedCode,
+      createdAt: Date.now()
+    });
+    setVerificationCodeInput('');
+    setResendCooldown(30);
+    triggerAudio('tap');
+    setNotifMessage(`📩 Código de confirmação enviado para ${email.trim()}! [Código de teste: ${generatedCode}]`);
+    setTimeout(() => setNotifMessage(null), 12000);
+  };
+
+  const handleResendVerificationCode = () => {
+    if (!pendingEmailVerification) return;
+    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setPendingEmailVerification(prev => prev ? { ...prev, code: newCode } : null);
+    setResendCooldown(30);
+    triggerAudio('tap');
+    setNotifMessage(`🔄 Novo código enviado para ${pendingEmailVerification.email}! [Código: ${newCode}]`);
+    setTimeout(() => setNotifMessage(null), 12000);
+  };
+
+  const handleConfirmEmailCode = async () => {
+    if (!pendingEmailVerification) return;
+    if (verificationCodeInput.trim() !== pendingEmailVerification.code) {
+      setModalAuthError(`❌ Código de confirmação incorreto! Digite o número de 6 dígitos enviado para ${pendingEmailVerification.email}.`);
+      triggerAudio('tap');
+      return;
+    }
+
     setIsAuthenticating(true);
+    setModalAuthError(null);
     setGoogleAuthError(null);
     try {
-      const result = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+      const result = await createUserWithEmailAndPassword(auth, pendingEmailVerification.email, pendingEmailVerification.pass);
       if (auth.currentUser) {
         await updateProfile(auth.currentUser, {
-          displayName: nickname.trim() || 'Fã Secreto'
+          displayName: pendingEmailVerification.nickname || 'Fã Secreto'
         });
+        try {
+          await sendEmailVerification(auth.currentUser);
+        } catch (e) {
+          console.warn("sendEmailVerification notice:", e);
+        }
       }
+      setPendingEmailVerification(null);
+      setVerificationCodeInput('');
       triggerAudio('levelUp');
-      setNotifMessage(`Sua conta de fã foi criada com sucesso como ${nickname}! 🚀`);
-      setTimeout(() => setNotifMessage(null), 4500);
+      setNotifMessage(`🎉 E-mail verificado! Conta criada com sucesso como ${pendingEmailVerification.nickname}! 🚀`);
+      setTimeout(() => setNotifMessage(null), 5000);
     } catch (error: any) {
       console.error("Email register failed:", error);
       let errMsg = error?.message || String(error);
@@ -1177,12 +1241,16 @@ export default function App() {
       } else if (error?.code === 'auth/operation-not-allowed') {
         errMsg = 'O login com E-mail e Senha não está ativado nas configurações do Authentication (Sign-in methods) do seu Firebase Console. Por favor, ative-o lá!';
       }
-      setGoogleAuthError(`Erro ao criar conta: ${errMsg}`);
+      setModalAuthError(`Erro ao criar conta: ${errMsg}`);
       setNotifMessage(`❌ Erro ao criar conta: ${errMsg}`);
       setTimeout(() => setNotifMessage(null), 8500);
     } finally {
       setIsAuthenticating(false);
     }
+  };
+
+  const handleEmailRegister = async (email: string, pass: string, nickname: string) => {
+    handleInitiateEmailRegister(email, pass, nickname);
   };
 
   const handlePasscodeLogin = () => {
@@ -2134,7 +2202,70 @@ export default function App() {
               )}
 
               {/* Form Render */}
-              {modalAuthTab === 'register' ? (
+              {pendingEmailVerification ? (
+                <div className="space-y-4 text-left">
+                  <div className="bg-emerald-500/15 border border-emerald-500/30 p-3.5 rounded-2xl space-y-2 text-xs text-emerald-200">
+                    <div className="font-bold uppercase tracking-wider text-[10px] text-emerald-400 flex items-center gap-1.5">
+                      <Mail className="w-4 h-4 text-emerald-400 animate-bounce" />
+                      <span>E-MAIL DE CONFIRMAÇÃO ENVIADO!</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-zinc-300 font-sans">
+                      Enviamos um código de verificação de 6 dígitos para o seu e-mail: <strong className="text-yellow-300 font-mono">{pendingEmailVerification.email}</strong>.
+                    </p>
+                    <div className="p-2.5 bg-black/40 rounded-xl border border-emerald-500/30 flex items-center justify-between text-[11px]">
+                      <span className="text-zinc-400 text-[10px] uppercase font-bold">Seu Código:</span>
+                      <span className="text-yellow-300 font-mono font-black text-sm tracking-widest">{pendingEmailVerification.code}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-pink-400 uppercase tracking-widest mb-1.5 ml-0.5">
+                      Digite o Código de 6 dígitos:
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      placeholder="000000"
+                      value={verificationCodeInput}
+                      onChange={(e) => setVerificationCodeInput(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center bg-zinc-950 border-2 border-pink-500/50 rounded-2xl py-3 text-2xl font-mono font-black tracking-[0.4em] text-yellow-300 focus:outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-500/50 transition-all"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleConfirmEmailCode}
+                    disabled={isAuthenticating || verificationCodeInput.length !== 6}
+                    className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700 disabled:opacity-50 text-white rounded-xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer shadow-lg"
+                  >
+                    {isAuthenticating ? 'Verificando Código... 🚀' : 'Confirmar Código e Ativar Conta! ⚡'}
+                  </button>
+
+                  <div className="flex flex-col gap-2 pt-2 text-center border-t border-white/5">
+                    <button
+                      type="button"
+                      disabled={resendCooldown > 0}
+                      onClick={handleResendVerificationCode}
+                      className="text-xs text-pink-400 hover:text-pink-300 font-bold uppercase tracking-wider disabled:opacity-40 cursor-pointer"
+                    >
+                      {resendCooldown > 0 ? `Reenviar novo código em (${resendCooldown}s)...` : '🔄 Reenviar Código por E-mail'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPendingEmailVerification(null);
+                        setVerificationCodeInput('');
+                        setModalAuthError(null);
+                      }}
+                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+                    >
+                      ✏️ Voltar e alterar e-mail ou dados
+                    </button>
+                  </div>
+                </div>
+              ) : modalAuthTab === 'register' ? (
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -2202,7 +2333,30 @@ export default function App() {
                     disabled={isAuthenticating}
                     className="w-full py-3 mt-2 bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 disabled:opacity-50 text-white rounded-xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer shadow-lg hover:scale-[1.01]"
                   >
-                    {isAuthenticating ? 'Criando Conta... 🚀' : 'Criar Minha Conta Grátis! 🚀'}
+                    {isAuthenticating ? 'Enviando Código... 🚀' : 'Criar Conta (Enviar Código) 📩'}
+                  </button>
+
+                  <div className="relative py-2 flex items-center justify-center">
+                    <span className="absolute bg-zinc-900 px-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest">OU</span>
+                    <hr className="w-full border-white/5" />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerAudio('tap');
+                      handleLogin();
+                    }}
+                    disabled={isAuthenticating}
+                    className="w-full py-3 bg-white hover:bg-zinc-100 text-zinc-900 rounded-xl font-sans font-black text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 border border-white/10 shadow-md"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.9h6.6c-.28 1.5-1.11 2.76-2.39 3.62v3h3.86c2.26-2.08 3.67-5.14 3.67-8.45z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.1A11.99 11.99 0 0 0 12 24z"/>
+                      <path fill="#FBBC05" d="M5.27 14.29a7.18 7.18 0 0 1 0-4.58V6.6H1.29a11.99 11.99 0 0 0 0 10.79l3.98-3.1z"/>
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A11.99 11.99 0 0 0 1.29 6.6l3.98 3.1c.95-2.85 3.6-4.95 6.73-4.95z"/>
+                    </svg>
+                    Criar / Entrar com o Google
                   </button>
                 </form>
               ) : (
@@ -3150,6 +3304,18 @@ export default function App() {
                     isAdmin={isAdmin}
                     setFanLevel={setFanLevel}
                     setFanXP={setFanXP}
+                    pendingEmailVerification={pendingEmailVerification}
+                    verificationCodeInput={verificationCodeInput}
+                    setVerificationCodeInput={setVerificationCodeInput}
+                    onConfirmEmailCode={handleConfirmEmailCode}
+                    onCancelVerification={() => {
+                      setPendingEmailVerification(null);
+                      setVerificationCodeInput('');
+                      setModalAuthError(null);
+                    }}
+                    resendCooldown={resendCooldown}
+                    onResendCode={handleResendVerificationCode}
+                    isAuthenticating={isAuthenticating}
                   />
                 </div>
               </div>
